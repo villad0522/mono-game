@@ -121,6 +121,9 @@ monoSocket.init( '最初の画面のファイル名', 'ゲームID' );
     //
     // プレイヤーデータ
     _setPlayerData(playerId, key, data) {
+        if (!playerId) {
+            playerId = 0;
+        }
         if (!this._playerDatas[playerId]) {
             this._playerDatas[playerId] = {};
         }
@@ -616,12 +619,10 @@ monoSocket.init( '最初の画面のファイル名', 'ゲームID' );
     }
 
     async forceWritePlayerData(playerId, key, data) {
-        if (!playerId) {
-            playerId = 0;
-        }
         this._setPlayerData(playerId, key, data);
         if (!this.socket) return;
         if (!this._initSocketFlag) return;
+        if (!playerId) return;
         this.socket.emit('playerData', playerId, key, data);
     }
 };

@@ -4,7 +4,7 @@
     <head>
         <meta charset="utf-8">
         <title>TimeHunter</title>
-        <script src="https://mono-socket.link"></script>
+        <script src="../monoSocket.js"></script>
     </head>
 
     <body>
@@ -42,6 +42,7 @@
                 // サーバーからデータを受け取る
                 const data = monoSocket.getPlayerData(myPlayerId, "座標");
                 if (!data) return;
+                const nowStage = monoSocket.getRoomData('現在のステージ');
                 //
                 const mapX = (width / 2) - (data.x * TILE_SIZE);    //画面上における、マップの左上の座標
                 const mapY = (height / 2) - (data.y * TILE_SIZE);    //画面上における、マップの左上の座標
