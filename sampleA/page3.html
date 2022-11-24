@@ -52,8 +52,7 @@
                     }
                 }
                 const playerIds = monoSocket.getPlayerIds();
-                console.log(playerIds);
-                for (let i = 0; i < playerIds.length; i++) {
+                for (let i = 0; i < monoSocket.getPlayerNumber(); i++) {
                     // サーバーからデータを受け取る
                     const data = monoSocket.getPlayerData(playerIds[i], "座標");
                     if (data) {

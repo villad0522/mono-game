@@ -24,6 +24,17 @@ style.innerHTML = `
         width: 100%;
         height: 100%;
     }
+    #monoSocketFadeLayer {
+        position:absolute;
+        top:0px;
+        left:0px;
+        width:100%;
+        height:100%;
+        background-color:#000000;
+        opacity:0.5;
+        visibility:hidden;
+        z-index:999;
+    }
 `;
 document.head.appendChild(style);
 
@@ -219,6 +230,23 @@ monoSocket.init( '最初の画面のファイル名', 'ゲームID' );
         location.href = htmlFileName + '?' + params.toString();
     }
 
+    //#########################################################################################
+    // ユーティリティ
+
+    showLoader() {
+        console.log('a');
+        const divElement = document.createElement('div');
+        divElement.id = 'monoSocketFadeLayer';
+        document.body.appendChild(divElement);
+        //
+        const imgElement = document.createElement('img');
+        imgElement.src = 'img/loader.svg'; // 画像パス
+        imgElement.alt = 'さいくん'; // 代替テキスト
+        imgElement.width = 200; // 横サイズ（px）
+        imgElement.height = 200; // 縦サイズ（px）
+        document.body.appendChild(imgElement);
+    }
+
     // エラーを表示
     _showErrorMessage(message) {
         document.body.innerHTML = '<h3 style="color:red;">エラー</h3><textarea style="color:red;width:100%;height:70vh">' + message + '</textarea>';
@@ -231,8 +259,11 @@ monoSocket.init( '最初の画面のファイル名', 'ゲームID' );
         throw '\n\n' + message;
     }
 
+    //#########################################################################################
+    // 初期化処理
 
     init(firstPage, gameId) {
+        this.showLoader();
         if (!gameId) {
             this._showErrorMessage('関数 monoSocket.init() の引数に、ゲームIDが指定されていません。\n\n' + this._ERROR_MESSAGE__INIT);
         }
