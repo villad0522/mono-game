@@ -290,7 +290,6 @@ monoSocket.init( '最初の画面のファイル名', 'ゲームID' );
         if (nowFileName != firstPage) {
             if (nowFileName == this._getNowFileNameFromSessionStorage()) {
                 this._goNextPage(firstPage);
-                this.deleteLoader();
                 return;
             }
         }
@@ -372,18 +371,20 @@ monoSocket.init( '最初の画面のファイル名', 'ゲームID' );
         catch (e) {
             this._showErrorMessage(e);
         }
-        this.deleteLoader();
         if (res.status != 200) {
             alert(res.statusText);
+            this.deleteLoader();
             return;
         }
         if (!res || !res.data) {
             alert('サーバーと通信できません');
+            this.deleteLoader();
             return;
         }
         const { isSuccess, message, data, isEC2running } = res.data;
         if (!isSuccess) {
             alert(message);
+            this.deleteLoader();
             return;
         }
         this._setPlayerId(data.playerId);
@@ -423,18 +424,20 @@ monoSocket.init( '最初の画面のファイル名', 'ゲームID' );
         catch (e) {
             this._showErrorMessage(e);
         }
-        this.deleteLoader();
         if (res.status != 200) {
             alert(res.statusText);
+            this.deleteLoader();
             return;
         }
         if (!res || !res.data) {
             alert('サーバーと通信できません');
+            this.deleteLoader();
             return;
         }
         const { isSuccess, message, data, isEC2running } = res.data;
         if (!isSuccess) {
             alert(message);
+            this.deleteLoader();
             return;
         }
         this._setPlayerId(data.playerId);
@@ -471,18 +474,20 @@ monoSocket.init( '最初の画面のファイル名', 'ゲームID' );
         catch (e) {
             this._showErrorMessage(e);
         }
-        this.deleteLoader();
         if (res.status != 200) {
             alert(res.statusText);
+            this.deleteLoader();
             return;
         }
         if (!res || !res.data) {
             alert('サーバーと通信できません');
+            this.deleteLoader();
             return;
         }
         const { isSuccess, message, data, isEC2running } = res.data;
         if (!isSuccess) {
             alert(message);
+            this.deleteLoader();
             return;
         }
         var roomNumber;
@@ -491,10 +496,12 @@ monoSocket.init( '最初の画面のファイル名', 'ゲームID' );
         }
         catch (e) {
             // 部屋番号が数字ではない場合
+            this.deleteLoader();
             return;
         }
         if (!isEC2running) {
             alert('サーバーがスリープしていました。只今起動しておりますので、数分後に再度クリックしてください。');
+            this.deleteLoader();
             return;
         }
         this._setRoomNumber(roomNumber);
@@ -539,22 +546,25 @@ monoSocket.init( '最初の画面のファイル名', 'ゲームID' );
         catch (e) {
             this._showErrorMessage(e);
         }
-        this.deleteLoader();
         if (res.status != 200) {
             alert(res.statusText);
+            this.deleteLoader();
             return;
         }
         if (!res || !res.data) {
             alert('サーバーと通信できません');
+            this.deleteLoader();
             return;
         }
         const { isSuccess, message, data, isEC2running } = res.data;
         if (!isSuccess) {
             alert(message);
+            this.deleteLoader();
             return;
         }
         if (!isEC2running) {
             alert('サーバーがスリープしていました。只今起動しておりますので、数分後に再度クリックしてください。');
+            this.deleteLoader();
             return;
         }
         this._setRoomNumber(roomNumber);
