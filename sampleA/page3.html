@@ -52,11 +52,14 @@
                     }
                 }
                 const playerIds = monoSocket.getPlayerIds();
+                console.log(playerIds);
                 for (let i = 0; i < playerIds.length; i++) {
                     // サーバーからデータを受け取る
                     const data = monoSocket.getPlayerData(playerIds[i], "座標");
-                    // 円を表示
-                    ellipse(data.x, data.y, 50, 50);
+                    if (data) {
+                        // 円を表示
+                        ellipse(data.x, data.y, 50, 50);
+                    }
                 }
                 // サーバーにデータを送る
                 monoSocket.writePlayerData(playerId, '座標', { x: mouseX, y: mouseY });
