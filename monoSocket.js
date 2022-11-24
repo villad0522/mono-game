@@ -24,7 +24,7 @@ style.innerHTML = `
         width: 100%;
         height: 100%;
     }
-    #monoSocketFadeLayer {
+    #monoSocketLoader {
         position:absolute;
         top:0px;
         left:0px;
@@ -32,8 +32,19 @@ style.innerHTML = `
         height:100%;
         background-color:#000000;
         opacity:0.5;
-        visibility:hidden;
         z-index:999;
+        text-align: center;
+    }
+    #monoSocketLoader img {
+        vertical-align:middle;
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        margin: auto;
+        width: 100px;
+        height: 100px;
     }
 `;
 document.head.appendChild(style);
@@ -234,21 +245,24 @@ monoSocket.init( '最初の画面のファイル名', 'ゲームID' );
     // ユーティリティ
 
     showLoader() {
-        console.log('a');
         const divElement = document.createElement('div');
-        divElement.id = 'monoSocketFadeLayer';
-        document.body.appendChild(divElement);
+        divElement.id = 'monoSocketLoader';
         //
         const imgElement = document.createElement('img');
-        imgElement.src = 'img/loader.svg'; // 画像パス
-        imgElement.alt = 'さいくん'; // 代替テキスト
-        imgElement.width = 200; // 横サイズ（px）
-        imgElement.height = 200; // 縦サイズ（px）
-        document.body.appendChild(imgElement);
+        imgElement.src = 'https://mono-game.s3.ap-northeast-1.amazonaws.com/img/loader.svg'; // 画像パス
+        imgElement.alt = '読み込み中'; // 代替テキスト
+        //
+        divElement.appendChild(imgElement);
+        document.body.appendChild(divElement);
+    }
+
+    deleteLoader() {
+        document.getElementById("monoSocketLoader").remove();
     }
 
     // エラーを表示
     _showErrorMessage(message) {
+        this.deleteLoader();
         document.body.innerHTML = '<h3 style="color:red;">エラー</h3><textarea style="color:red;width:100%;height:70vh">' + message + '</textarea>';
         const loginPage = this.getFirstPage();
         if (loginPage != this._getNowFileName()) { // 現在、ログイン画面ではなかったら
@@ -276,6 +290,7 @@ monoSocket.init( '最初の画面のファイル名', 'ゲームID' );
         if (nowFileName != firstPage) {
             if (nowFileName == this._getNowFileNameFromSessionStorage()) {
                 this._goNextPage(firstPage);
+                this.deleteLoader();
                 return;
             }
         }
@@ -283,15 +298,22 @@ monoSocket.init( '最初の画面のファイル名', 'ゲームID' );
         window.addEventListener('load', () => {  // 画面が読み込まれたタイミングで実行される処理
             //
             const playerId = this.getPlayerId();
-            if (!playerId) return;
+            if (!playerId) {
+                this.deleteLoader();
+                return;
+            }
             const roomNumber = this.getRoomNumber();
-            if (!roomNumber) return;
+            if (!roomNumber) {
+                this.deleteLoader();
+                return;
+            }
             //
             console.log('ソケット通信開始');
             this.socket = io.connect(`https://mono-socket.link/${gameId}/${roomNumber}`);
             this.socket.on("connect", () => {
                 if (!this.socket.connect().connected) { // サーバに接続できたか
                     this._showErrorMessage('接続失敗');
+                    this.deleteLoader();
                     return;
                 }
                 this.socket.emit('firstSend', playerId);
@@ -305,12 +327,14 @@ monoSocket.init( '最初の画面のファイル名', 'ゲームID' );
             //
             this.socket.on("alert", (message) => {
                 alert(message);
+                this.deleteLoader();
             });
             //
             this.socket.on("playerDatas", (playerDatas) => {
                 this._playerDatas = playerDatas;
                 this._initSocketFlag = true;
                 console.log('接続成功');
+                this.deleteLoader();
             });
             //
             // 部屋データが変更されたときの処理
@@ -329,6 +353,7 @@ monoSocket.init( '最初の画面のファイル名', 'ゲームID' );
         if (!nextPage) {
             this._showErrorMessage('関数 monoSocket.signup() の引数に、次の画面のファイル名が指定されていません。');
         }
+        this.showLoader();
         let res;
         try {
             res = await axios.post(
@@ -347,6 +372,7 @@ monoSocket.init( '最初の画面のファイル名', 'ゲームID' );
         catch (e) {
             this._showErrorMessage(e);
         }
+        this.deleteLoader();
         if (res.status != 200) {
             alert(res.statusText);
             return;
@@ -373,6 +399,7 @@ monoSocket.init( '最初の画面のファイル名', 'ゲームID' );
             alert('関数 monoSocket.signin() の第１引数に、プレイヤーIDが指定されていません。');
             return;
         }
+        this.showLoader();
         let res;
         try {
             res = await axios.post(
@@ -396,6 +423,7 @@ monoSocket.init( '最初の画面のファイル名', 'ゲームID' );
         catch (e) {
             this._showErrorMessage(e);
         }
+        this.deleteLoader();
         if (res.status != 200) {
             alert(res.statusText);
             return;
@@ -421,6 +449,7 @@ monoSocket.init( '最初の画面のファイル名', 'ゲームID' );
         if (!nextPage) {
             this._showErrorMessage('関数 monoSocket.createRoom() の引数に、次の画面のファイル名が指定されていません。');
         }
+        this.showLoader();
         let res;
         try {
             res = await axios.post(
@@ -442,6 +471,7 @@ monoSocket.init( '最初の画面のファイル名', 'ゲームID' );
         catch (e) {
             this._showErrorMessage(e);
         }
+        this.deleteLoader();
         if (res.status != 200) {
             alert(res.statusText);
             return;
@@ -487,6 +517,7 @@ monoSocket.init( '最初の画面のファイル名', 'ゲームID' );
             // 部屋番号が数字ではない場合
             return;
         }
+        this.showLoader();
         let res;
         try {
             res = await axios.post(
@@ -508,6 +539,7 @@ monoSocket.init( '最初の画面のファイル名', 'ゲームID' );
         catch (e) {
             this._showErrorMessage(e);
         }
+        this.deleteLoader();
         if (res.status != 200) {
             alert(res.statusText);
             return;
