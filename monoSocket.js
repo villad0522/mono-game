@@ -262,7 +262,6 @@ monoSocket.init( '最初の画面のファイル名', 'ゲームID' );
 
     // エラーを表示
     _showErrorMessage(message) {
-        this.deleteLoader();
         document.body.innerHTML = '<h3 style="color:red;">エラー</h3><textarea style="color:red;width:100%;height:70vh">' + message + '</textarea>';
         const loginPage = this.getFirstPage();
         if (loginPage != this._getNowFileName()) { // 現在、ログイン画面ではなかったら
@@ -270,7 +269,10 @@ monoSocket.init( '最初の画面のファイル名', 'ゲームID' );
                 this._goNextPage(loginPage);    // エラーを表示した３秒後にログイン画面に戻る
             }, 3000);
         }
-        throw '\n\n' + message;
+        else {
+            this.deleteLoader();
+            throw '\n\n' + message;
+        }
     }
 
     //#########################################################################################
