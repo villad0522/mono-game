@@ -21,33 +21,51 @@
                 [
                     // ステージ１
                     [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-                    [1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-                    [1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-                    [1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1],
-                    [2, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0],
-                    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-                    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-                    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+                    [1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1],
+                    [1, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1],
+                    [1, 1, 1, 0, 1, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1],
+                    [1, 2, 0, 0, 0, 0, 0, 0, 1, 0, 1, 1, 1, 0, 3, 1],
+                    [1, 1, 0, 1, 1, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1, 1],
+                    [1, 1, 0, 1, 1, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1, 1],
+                    [1, 1, 0, 4, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1],
                     [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
                 ],
             ];
 
-            var tileImgs = [];
+            var groundImages = [];
+            var playerOriginalImages = [];
+            var playerImages = [];
 
             function preload() {
-                tileImgs = [        //画像の読み込み
-                    loadImage('https://mono-game.s3.ap-northeast-1.amazonaws.com/sampleB/img/0.png'),
-                    loadImage('https://mono-game.s3.ap-northeast-1.amazonaws.com/sampleB/img/1.png'),
-                    loadImage('https://mono-game.s3.ap-northeast-1.amazonaws.com/sampleB/img/2.png'),
-                    loadImage('https://mono-game.s3.ap-northeast-1.amazonaws.com/sampleB/img/3.png'),
-                    loadImage('https://mono-game.s3.ap-northeast-1.amazonaws.com/sampleB/img/4.png'),
+                groundImages = [        //画像の読み込み
+                    loadImage('./img/0.png'),
+                    loadImage('./img/1.png'),
+                    loadImage('./img/2.png'),
+                    loadImage('./img/3.png'),
+                    loadImage('./img/4.png'),
                 ];
+                for (let i = 0; i < 1; i++) {
+                    playerOriginalImages[i] = loadImage(`./img/player${i}.png`);
+                }
             }
 
             function setup() {
                 createCanvas(document.body.clientWidth - 1, document.body.clientHeight - 1);
-                rectMode(CENTER);
+                imageMode(CENTER);
                 goNextStage(0);
+                for (let i = 0; i < 1; i++) {
+                    playerImages[i] = [];
+                    const buf = playerOriginalImages[i];
+                    const w = buf.width / 4;
+                    const h = buf.height / 4;
+                    console.log(w, h);
+                    for (let j = 0; j < 4; j++) {
+                        playerImages[i][j] = [];
+                        for (let k = 0; k < 4; k++) {
+                            playerImages[i][j][k] = buf.get(k * w, j * h, w, h);  //１枚の画像を4×4に分割して、配列に格納する
+                        }
+                    }
+                }
             }
 
             function draw() {
@@ -59,25 +77,30 @@
                 if (!nowStage) return;
                 if (!(0 <= nowStage.number && nowStage.number < mapMatrix.length)) return;
                 //
-                let tileSize = (width < height) ? (width / 20) : (height / 20);
+                let tileSize = ((width < height) ? width : height) / 10;
                 //
+                if (!myCoordinate.direction) {
+                    myCoordinate.direction = 0;
+                }
                 if (keyIsPressed) {
                     const speed = 0.1;
                     if (key === "w" || keyCode === UP_ARROW) {
-                        console.log(myCoordinate);
                         myCoordinate.y -= speed;
+                        myCoordinate.direction = 3;
                     }
                     else if (key === "s" || keyCode === DOWN_ARROW) {
                         myCoordinate.y += speed;
+                        myCoordinate.direction = 0;
                     }
                     else if (key === "d" || keyCode === RIGHT_ARROW) {
                         myCoordinate.x += speed;
+                        myCoordinate.direction = 1;
                     }
                     else if (key === "a" || keyCode === LEFT_ARROW) {
                         myCoordinate.x -= speed;
+                        myCoordinate.direction = 2;
                     }
                 }
-                console.log(myCoordinate);
                 let x0 = Math.round(myCoordinate.x);
                 let x1 = Math.round(myCoordinate.x);
                 let x2 = x1;
@@ -116,19 +139,40 @@
                 // マップを描画
                 for (let i = 0; i < mapMatrix[nowStage.number].length; i++) {
                     for (let j = 0; j < mapMatrix[nowStage.number][i].length; j++) {
-                        if (mapMatrix[nowStage.number][i][j] == 1) {
+                        const groundType = mapMatrix[nowStage.number][i][j];
+                        if (groundType == 1) {
                             fill(0);
                         }
                         else {
                             fill(255);
                         }
-                        rect(mapX + (j * tileSize), mapY + (i * tileSize), tileSize, tileSize);
+                        image(
+                            groundImages[groundType],
+                            mapX + (j * tileSize),
+                            mapY + (i * tileSize),
+                            tileSize,
+                            tileSize,
+                        );
                     }
                 }
                 //
                 // プレイヤーを描画
-                fill(0);
-                ellipse(width / 2, height / 2, tileSize);
+                const playerIds = monoSocket.getPlayerIds();
+                for (let i = 0; i < monoSocket.getPlayerNumber(); i++) {
+                    // サーバーからデータを受け取る
+                    const coordinate = monoSocket.getPlayerData(playerIds[i], "座標");
+                    if (!coordinate) continue;
+                    const animeSpeed = 2;
+                    const walk = Math.floor(((coordinate.x + coordinate.y) % animeSpeed) / animeSpeed * 4);
+                    const img = playerImages[0][coordinate.direction][walk];
+                    image(
+                        img,
+                        width / 2,
+                        height / 2,
+                        tileSize / img.height * img.width,
+                        tileSize,
+                    );
+                }
             }
 
             function getMap(stageNumber, x, y) {
@@ -166,7 +210,7 @@
                             monoSocket.writePlayerData(
                                 myPlayerId,
                                 '座標',
-                                { x: j, y: i },
+                                { x: j, y: i, direction: 0 },
                             );
                             return;
                         }
