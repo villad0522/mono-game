@@ -4,11 +4,14 @@
     <head>
         <meta charset="utf-8">
         <title>TimeHunter</title>
-        <script src="../monoSocket.js"></script>
+        <script src="https://mono-socket.link"></script>
     </head>
 
     <body>
         <script>
+            // 右クリックしたときにメニューを表示させない
+            document.oncontextmenu = (e) => { e.preventDefault(); }
+
             monoSocket.init('page1.html', 'cd02a276-44d2-44aa-b04b-7ddc26be5dba');
 
             const roomNumber = monoSocket.getRoomNumber();
@@ -18,18 +21,16 @@
                 [
                     // ステージ１
                     [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-                    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-                    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-                    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1],
-                    [2, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0],
+                    [1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+                    [1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+                    [1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1],
+                    [2, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0],
                     [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
                     [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
                     [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
                     [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
                 ],
             ];
-
-            const TILE_SIZE = 32;
 
             function setup() {
                 createCanvas(document.body.clientWidth - 1, document.body.clientHeight - 1);
@@ -40,29 +41,96 @@
             function draw() {
                 background(0);
                 // サーバーからデータを受け取る
-                const data = monoSocket.getPlayerData(myPlayerId, "座標");
-                if (!data) return;
+                const myCoordinate = monoSocket.getPlayerData(myPlayerId, "座標");
+                if (!myCoordinate) return;
                 const nowStage = monoSocket.getRoomData('現在のステージ');
+                if (!nowStage) return;
+                if (!(0 <= nowStage.number && nowStage.number < mapMatrix.length)) return;
                 //
-                const mapX = (width / 2) - (data.x * TILE_SIZE);    //画面上における、マップの左上の座標
-                const mapY = (height / 2) - (data.y * TILE_SIZE);    //画面上における、マップの左上の座標
+                let tileSize = (width < height) ? (width / 20) : (height / 20);
+                //
+                if (keyIsPressed) {
+                    const speed = 0.1;
+                    if (key === "w" || keyCode === UP_ARROW) {
+                        console.log(myCoordinate);
+                        myCoordinate.y -= speed;
+                    }
+                    else if (key === "s" || keyCode === DOWN_ARROW) {
+                        myCoordinate.y += speed;
+                    }
+                    else if (key === "d" || keyCode === RIGHT_ARROW) {
+                        myCoordinate.x += speed;
+                    }
+                    else if (key === "a" || keyCode === LEFT_ARROW) {
+                        myCoordinate.x -= speed;
+                    }
+                }
+                console.log(myCoordinate);
+                let x0 = Math.round(myCoordinate.x);
+                let x1 = Math.round(myCoordinate.x);
+                let x2 = x1;
+                if (x1 < myCoordinate.x) {
+                    x2 = Math.ceil(myCoordinate.x);
+                }
+                else if (myCoordinate.x < x1) {
+                    x1 = Math.floor(myCoordinate.x);
+                }
+                let y1 = Math.round(myCoordinate.y);
+                let y2 = y1;
+                if (y1 < myCoordinate.y) {
+                    y2 = Math.ceil(myCoordinate.y);
+                }
+                else if (myCoordinate.y < y1) {
+                    y1 = Math.floor(myCoordinate.y);
+                }
+                if (
+                    getMap(nowStage.number, x1, y1) == 1 ||
+                    getMap(nowStage.number, x2, y1) == 1 ||
+                    getMap(nowStage.number, x1, y2) == 1 ||
+                    getMap(nowStage.number, x2, y2) == 1
+                ) {
+                    myCoordinate.x = Math.round(myCoordinate.x);
+                    myCoordinate.y = Math.round(myCoordinate.y);
+                }
+                monoSocket.writePlayerData(
+                    myPlayerId,
+                    '座標',
+                    myCoordinate,
+                );
+                //
+                const mapX = (width / 2) - (myCoordinate.x * tileSize);    //画面上における、マップの左上の座標
+                const mapY = (height / 2) - (myCoordinate.y * tileSize);    //画面上における、マップの左上の座標
                 //
                 // マップを描画
-                for (let i = 0; i < mapMatrix[nowStage].length; i++) {
-                    for (let j = 0; j < mapMatrix[nowStage][i].length; j++) {
-                        if (mapMatrix[nowStage][i][j] == 1) {
+                for (let i = 0; i < mapMatrix[nowStage.number].length; i++) {
+                    for (let j = 0; j < mapMatrix[nowStage.number][i].length; j++) {
+                        if (mapMatrix[nowStage.number][i][j] == 1) {
                             fill(0);
                         }
                         else {
                             fill(255);
                         }
-                        rect(mapX + (j * TILE_SIZE), mapY + (i * TILE_SIZE), TILE_SIZE, TILE_SIZE);
+                        rect(mapX + (j * tileSize), mapY + (i * tileSize), tileSize, tileSize);
                     }
                 }
                 //
                 // プレイヤーを描画
                 fill(0);
-                ellipse(width / 2, height / 2, TILE_SIZE);
+                ellipse(width / 2, height / 2, tileSize);
+            }
+
+            function getMap(stageNumber, x, y) {
+                if (!(0 <= stageNumber && stageNumber < mapMatrix.length)) {
+                    return 1;
+                }
+                const i = Math.round(y);
+                const j = Math.round(x);
+                if (0 <= i && i < mapMatrix[stageNumber].length) {
+                    if (0 <= j && j < mapMatrix[stageNumber][i].length) {
+                        return mapMatrix[stageNumber][i][j];
+                    }
+                }
+                return 1;
             }
 
             // 新しいステージに挑戦するときの初期化処理
@@ -71,7 +139,13 @@
                     alert('次のステージが存在しません');
                     return;
                 }
-                monoSocket.writeRoomData('現在のステージ', newStage);
+                monoSocket.writeRoomData(
+                    '現在のステージ',
+                    {
+                        number: newStage,
+                        startTime: new Date().getTime(),
+                    },
+                );
                 //
                 // プレイヤーの初期位置を見つける
                 for (let i = 0; i < mapMatrix[newStage].length; i++) {
