@@ -348,7 +348,7 @@ monoSocket.init( '最初の画面のファイル名', 'ゲームID' );
                 console.log('接続成功');
                 this.deleteLoader();
                 if (typeof init == 'function') {
-                    this.init();
+                    init();
                 }
             });
             //
