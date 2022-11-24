@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+    <head>
+        <meta charset="utf-8">
+        <title>自作オンラインゲーム</title>
+        <script src="https://mono-jimu.s3.ap-northeast-1.amazonaws.com/monoSocket.js"></script>
+        <script>
+            monoSocket.init('page1.html', '93c8358c-0268-4690-8201-ee8223552256');
+
+            const roomNumber = monoSocket.getRoomNumber();
+            const playerId = monoSocket.getPlayerId();
+
+            function setup() {
+                createCanvas(document.body.clientWidth, document.body.clientHeight - 1);
+            }
+
+            function draw() {
+                var value = monoSocket.getRoomDatas()["明るさ"];
+                if (!value) {
+                    value = 100;
+                }
+                background(value);
+                text(`部屋番号：${roomNumber ?? '？'}`, 30, 30);
+                text('a:明るくする　b:暗くする　c:退室　d:部屋を削除', 30, 60);
+                if (keyIsPressed) {
+                    if (key == "a") {
+                        // 明るくする
+                        value = value + 10;
+                        if (value > 255) {
+                            value = 255;
+                        }
+                        // サーバーにデータを送る
+                        monoSocket.writeRoomData("明るさ", value);
+                    } else if (key == "b") {
+                        // 暗くする
+                        value = value - 10;
+                        if (value < 100) {
+                            value = 100;
+                        }
+                        // サーバーにデータを送る
+                        monoSocket.writeRoomData("明るさ", value);
+                    } else if (key == "c") {
+                        // ２ページ目に戻る
+                        monoSocket.exit();
+                    } else if (key == "d") {
+                        // ２ページ目に戻る
+                        monoSocket.close();
+                    }
+                }
+                for (const id in monoSocket.getPlayerDatas()) {
+                    // 円を表示
+                    const x = monoSocket.getPlayerDatas()[id]?.["座標"]?.x ?? 0;
+                    const y = monoSocket.getPlayerDatas()[id]?.["座標"]?.y ?? 0;
+                    ellipse(x, y, 50, 50);
+                }
+                // サーバーにデータを送る
+                monoSocket.writePlayerData(playerId, '座標', { x: mouseX, y: mouseY });
+            }
+        </script>
+    </head>
+
+    <body>
+    </body>
+
+</html>

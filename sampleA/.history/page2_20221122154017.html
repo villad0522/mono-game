@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+        <title>自作オンラインゲーム</title>
+        <script src="https://mono-jimu.s3.ap-northeast-1.amazonaws.com/monoSocket.js"></script>
+        <script>
+            monoSocket.init('page1.html', '93c8358c-0268-4690-8201-ee8223552256');
+
+            window.addEventListener('load', async () => {  // 画面が読み込まれたタイミングで実行される処理
+
+                document.getElementById("button2-1").addEventListener('click', async () => {
+                    // 「部屋作成」ボタンが押されたときの処理
+                    var password = document.getElementById("input2-1").value;   //テキストボックスからパスワードを読み込む
+                    await monoSocket.createRoom('page3.html', password);
+                });
+
+
+                document.getElementById("button2-2").addEventListener('click', async () => {
+                    // 「既存の部屋に参加」ボタンが押されたときの処理
+                    var roomNumber = document.getElementById("input2-2").value;   //テキストボックスから部屋番号を読み込む
+                    var password = document.getElementById("input2-3").value;   //テキストボックスからパスワードを読み込む
+                    await monoSocket.joinRoom('page3.html', roomNumber, password);
+                });
+
+
+                document.getElementById("button2-3").addEventListener('click', async () => {
+                    // 「ランダムマッチ」ボタンが押されたときの処理
+                    await monoSocket.joinRandomMatch('page3.html');
+                });
+
+            });
+        </script>
+    </head>
+
+    <body>
+        <a href="./page1.html">戻る</a>
+        <h1>２ページ目</h1>
+        <hr>
+        <h3>部屋作成</h3>
+        <label for="input2-1">パスワード </label>
+        <input type="text" id="input2-1">
+        <br>
+        <button id="button2-1">部屋作成</button>
+        <br>
+        <br>
+        <br>
+        <hr>
+        <h3>既存の部屋に参加</h3>
+        <label for="input2-2">部屋番号 </label>
+        <input type="text" id="input2-2">
+        <label for="input2-3">パスワード </label>
+        <input type="text" id="input2-3">
+        <br>
+        <button id="button2-2">部屋に参加</button>
+        <br>
+        <br>
+        <br>
+        <hr>
+        <h3>【未実装】ランダムマッチ</h3>
+        <button id="button2-3">ランダムマッチ</button>
+        <br>
+        <br>
+        <br>
+        <hr>
+    </body>
+
+</html>
