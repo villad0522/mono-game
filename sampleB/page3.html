@@ -32,6 +32,18 @@
                 ],
             ];
 
+            var tileImgs = [];
+
+            function preload() {
+                tileImgs = [        //画像の読み込み
+                    loadImage('https://mono-game.s3.ap-northeast-1.amazonaws.com/sampleB/img/0.png'),
+                    loadImage('https://mono-game.s3.ap-northeast-1.amazonaws.com/sampleB/img/1.png'),
+                    loadImage('https://mono-game.s3.ap-northeast-1.amazonaws.com/sampleB/img/2.png'),
+                    loadImage('https://mono-game.s3.ap-northeast-1.amazonaws.com/sampleB/img/3.png'),
+                    loadImage('https://mono-game.s3.ap-northeast-1.amazonaws.com/sampleB/img/4.png'),
+                ];
+            }
+
             function setup() {
                 createCanvas(document.body.clientWidth - 1, document.body.clientHeight - 1);
                 rectMode(CENTER);
