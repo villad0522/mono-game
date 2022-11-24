@@ -12,53 +12,80 @@
             monoSocket.init('page1.html', 'cd02a276-44d2-44aa-b04b-7ddc26be5dba');
 
             const roomNumber = monoSocket.getRoomNumber();
-            const playerId = monoSocket.getPlayerId();
+            const myPlayerId = monoSocket.getPlayerId();
+
+            const mapMatrix = [
+                [
+                    // ステージ１
+                    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+                    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+                    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+                    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1],
+                    [2, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0],
+                    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+                    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+                    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+                    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+                ],
+            ];
+
+            const TILE_SIZE = 32;
 
             function setup() {
-                createCanvas(document.body.clientWidth, document.body.clientHeight - 1);
+                createCanvas(document.body.clientWidth - 1, document.body.clientHeight - 1);
+                rectMode(CENTER);
+                goNextStage(0);
             }
 
             function draw() {
-                var value = monoSocket.getRoomDatas()["明るさ"];
-                if (!value) {
-                    value = 100;
-                }
-                background(value);
-                text(`部屋番号：${roomNumber ?? '？'}`, 30, 30);
-                text('a:明るくする　b:暗くする　c:退室　d:部屋を削除', 30, 60);
-                if (keyIsPressed) {
-                    if (key == "a") {
-                        // 明るくする
-                        value = value + 10;
-                        if (value > 255) {
-                            value = 255;
+                background(0);
+                // サーバーからデータを受け取る
+                const data = monoSocket.getPlayerData(myPlayerId, "座標");
+                if (!data) return;
+                //
+                const mapX = (width / 2) - (data.x * TILE_SIZE);    //画面上における、マップの左上の座標
+                const mapY = (height / 2) - (data.y * TILE_SIZE);    //画面上における、マップの左上の座標
+                //
+                // マップを描画
+                for (let i = 0; i < mapMatrix[nowStage].length; i++) {
+                    for (let j = 0; j < mapMatrix[nowStage][i].length; j++) {
+                        if (mapMatrix[nowStage][i][j] == 1) {
+                            fill(0);
                         }
-                        // サーバーにデータを送る
-                        monoSocket.writeRoomData("明るさ", value);
-                    } else if (key == "b") {
-                        // 暗くする
-                        value = value - 10;
-                        if (value < 100) {
-                            value = 100;
+                        else {
+                            fill(255);
                         }
-                        // サーバーにデータを送る
-                        monoSocket.writeRoomData("明るさ", value);
-                    } else if (key == "c") {
-                        // ２ページ目に戻る
-                        monoSocket.exit();
-                    } else if (key == "d") {
-                        // ２ページ目に戻る
-                        monoSocket.close();
+                        rect(mapX + (j * TILE_SIZE), mapY + (i * TILE_SIZE), TILE_SIZE, TILE_SIZE);
                     }
                 }
-                for (const id in monoSocket.getPlayerDatas()) {
-                    // 円を表示
-                    const x = monoSocket.getPlayerDatas()[id]?.["座標"]?.x ?? 0;
-                    const y = monoSocket.getPlayerDatas()[id]?.["座標"]?.y ?? 0;
-                    ellipse(x, y, 50, 50);
+                //
+                // プレイヤーを描画
+                fill(0);
+                ellipse(width / 2, height / 2, TILE_SIZE);
+            }
+
+            // 新しいステージに挑戦するときの初期化処理
+            function goNextStage(newStage) {
+                if (!(0 <= newStage && newStage < mapMatrix.length)) {
+                    alert('次のステージが存在しません');
+                    return;
                 }
-                // サーバーにデータを送る
-                monoSocket.writePlayerData(playerId, '座標', { x: mouseX, y: mouseY });
+                monoSocket.writeRoomData('現在のステージ', newStage);
+                //
+                // プレイヤーの初期位置を見つける
+                for (let i = 0; i < mapMatrix[newStage].length; i++) {
+                    for (let j = 0; j < mapMatrix[newStage][i].length; j++) {
+                        if (mapMatrix[newStage][i][j] == 2) {
+                            monoSocket.writePlayerData(
+                                myPlayerId,
+                                '座標',
+                                { x: j, y: i },
+                            );
+                            return;
+                        }
+                    }
+                }
+                alert(`ステージ${newStage}に移行しようとしましたが、プレイヤーの初期位置が見つかりませんでした`);
             }
         </script>
     </body>

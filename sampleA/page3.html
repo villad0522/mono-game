@@ -15,7 +15,7 @@
             const playerId = monoSocket.getPlayerId();
 
             function setup() {
-                createCanvas(document.body.clientWidth, document.body.clientHeight - 1);
+                createCanvas(document.body.clientWidth - 1, document.body.clientHeight - 1);
             }
 
             function draw() {
@@ -56,7 +56,7 @@
                     // サーバーからデータを受け取る
                     const data = monoSocket.getPlayerData(playerIds[i], "座標");
                     if (data) {
-                        // 円を表示
+                        // プレイヤー（円）を表示
                         ellipse(data.x, data.y, 50, 50);
                     }
                 }

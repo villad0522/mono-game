@@ -6,12 +6,21 @@
         <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
         <title>TimeHunter</title>
         <script src="https://mono-socket.link"></script>
+        <style>
+            .title-logo {
+                text-align: center;
+            }
+
+        </style>
     </head>
 
     <body>
         <br>
-        <h1>１ページ目</h1>
+        <h1 class="title-logo">Time Hunter</h1>
         <hr>
+        <button id="button1-3">ひとりで</button>
+        <br>
+        <br>
         <button id="button1-1">はじめから</button>
         <br>
         <br>
@@ -23,9 +32,14 @@
         <script>
             monoSocket.init('page1.html', 'cd02a276-44d2-44aa-b04b-7ddc26be5dba');
 
+            document.getElementById("button1-3").addEventListener('click', () => {
+                // 「ひとりで」ボタンが押されたときの処理
+                monoSocket.signup('page3.html');
+            });
+
             document.getElementById("button1-1").addEventListener('click', () => {
                 // 「はじめから」ボタンが押されたときの処理
-                monoSocket.signup('page2.html');  // プレイヤー新規登録
+                monoSocket.signup('page2.html');
             });
 
 

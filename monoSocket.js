@@ -127,6 +127,9 @@ monoSocket.init( '最初の画面のファイル名', 'ゲームID' );
         this._playerDatas[playerId][key] = data;
     }
     getPlayerData = (playerId, key) => {
+        if (!playerId) {
+            playerId = 0;
+        }
         const playerData = this._playerDatas[playerId];
         if (!playerData) return undefined;
         return playerData[key];
@@ -606,16 +609,19 @@ monoSocket.init( '最初の画面のファイル名', 'ゲームID' );
     }
 
     async forceWriteRoomData(key, data) {
+        this._setRoomData(key, data);
         if (!this.socket) return;
         if (!this._initSocketFlag) return;
-        this._setRoomData(key, data);
         this.socket.emit('roomData', key, data);
     }
 
     async forceWritePlayerData(playerId, key, data) {
+        if (!playerId) {
+            playerId = 0;
+        }
+        this._setPlayerData(playerId, key, data);
         if (!this.socket) return;
         if (!this._initSocketFlag) return;
-        this._setPlayerData(playerId, key, data);
         this.socket.emit('playerData', playerId, key, data);
     }
 };
