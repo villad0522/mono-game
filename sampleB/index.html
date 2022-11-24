@@ -7,8 +7,16 @@
         <title>TimeHunter</title>
         <script src="https://mono-socket.link"></script>
         <style>
+            html {
+                background: #000;
+            }
+
             .title-logo {
-                text-align: center;
+                display: block;
+                width: 60%;
+                min-width: 300px;
+                max-width: 90%;
+                margin: 0 auto;
             }
 
         </style>
@@ -16,7 +24,7 @@
 
     <body>
         <br>
-        <h1 class="title-logo">Time Hunter</h1>
+        <img class="title-logo" src="./img/title.png">
         <hr>
         <button id="button1-3">ひとりで</button>
         <br>
@@ -30,7 +38,7 @@
         <br>
         <hr>
         <script>
-            monoSocket.init('page1.html', 'cd02a276-44d2-44aa-b04b-7ddc26be5dba');
+            monoSocket.init('index.html', 'cd02a276-44d2-44aa-b04b-7ddc26be5dba');
 
             document.getElementById("button1-3").addEventListener('click', () => {
                 // 「ひとりで」ボタンが押されたときの処理
