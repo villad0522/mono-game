@@ -49,10 +49,8 @@
                 }
             }
 
-            function setup() {
-                createCanvas(document.body.clientWidth - 1, document.body.clientHeight - 1);
+            function init() {
                 imageMode(CENTER);
-                goNextStage(0);
                 for (let i = 0; i < 1; i++) {
                     playerImages[i] = [];
                     const buf = playerOriginalImages[i];
@@ -66,16 +64,21 @@
                         }
                     }
                 }
+                goNextStage(0);
             }
 
             function draw() {
                 background(0);
-                // サーバーからデータを受け取る
-                const myCoordinate = monoSocket.getPlayerData(myPlayerId, "座標");
-                if (!myCoordinate) return;
+                text(`部屋番号：${roomNumber ?? '？'}`, 30, 30);
+                let myCoordinate = monoSocket.getPlayerData(myPlayerId, "座標");  // サーバーからデータを受け取る
+                if (!myCoordinate) {
+                    console.log(myPlayerId);
+                    return;
+                }
                 const nowStage = monoSocket.getRoomData('現在のステージ');
                 if (!nowStage) return;
                 if (!(0 <= nowStage.number && nowStage.number < mapMatrix.length)) return;
+                console.log('a');
                 //
                 let tileSize = ((width < height) ? width : height) / 10;
                 //

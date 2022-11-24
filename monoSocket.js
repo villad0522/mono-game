@@ -75,6 +75,11 @@ document.head.appendChild(style);
 
 
 
+function setup() {
+    createCanvas(document.body.clientWidth - 1, document.body.clientHeight - 1);
+}
+
+
 class MonoSocket {
 
     constructor() {
@@ -342,6 +347,9 @@ monoSocket.init( '最初の画面のファイル名', 'ゲームID' );
                 this._initSocketFlag = true;
                 console.log('接続成功');
                 this.deleteLoader();
+                if (typeof init == 'function') {
+                    this.init();
+                }
             });
             //
             // 部屋データが変更されたときの処理
