@@ -109,16 +109,17 @@ monoSocket.init( '最初の画面のファイル名', 'ゲームID' );
         if (!playerData) return undefined;
         return playerData[key];
     };
-    getPlayerDatas = () => this._playerDatas.map(
-        item => {
-            const playerData = {
-                ...item,
+    getPlayerDatas = () => {
+        const playerDatas = {};
+        for (const playerId in this._playerDatas) {
+            playerDatas[playerId] = {
+                ...this._playerDatas[playerId],
             };
-            delete playerData.playerId;
-            delete playerData.gameId;
-            return playerData;
-        },
-    );
+            delete playerDatas[playerId].playerId;
+            delete playerDatas[playerId].gameId;
+        }
+        return playerDatas;
+    };
     getPlayerIds = () => Object.keys(this._playerDatas);
     getPlayerNumber = () => Object.keys(this._playerDatas).length;
     //
