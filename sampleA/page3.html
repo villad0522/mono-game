@@ -4,9 +4,12 @@
     <head>
         <meta charset="utf-8">
         <title>自作オンラインゲーム</title>
-        <script src="https://mono-jimu.s3.ap-northeast-1.amazonaws.com/monoSocket.js"></script>
+        <script src="https://mono-socket.link"></script>
+    </head>
+
+    <body>
         <script>
-            monoSocket.init('page1.html', '93c8358c-0268-4690-8201-ee8223552256');
+            monoSocket.init('page1.html', '089a11d5-ed4f-41bb-bf84-59cbf53ddc8c');
 
             const roomNumber = monoSocket.getRoomNumber();
             const playerId = monoSocket.getPlayerId();
@@ -58,9 +61,6 @@
                 monoSocket.writePlayerData(playerId, '座標', { x: mouseX, y: mouseY });
             }
         </script>
-    </head>
-
-    <body>
     </body>
 
 </html>

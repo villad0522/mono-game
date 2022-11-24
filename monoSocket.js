@@ -1,3 +1,4 @@
+// http://mono-game.s3-website-ap-northeast-1.amazonaws.com
 
 const style = document.createElement('style')
 style.innerHTML = `
@@ -88,34 +89,53 @@ monoSocket.init( '最初の画面のファイル名', 'ゲームID' );
 
     //#########################################################################################
     // ゲッター＆セッター
-
-    getRoomDatas = () => this._roomDatas;
-    getPlayerDatas = () => this._playerDatas;
+    //
+    // 部屋データ
     _setRoomData(key, data) {
         this._roomDatas[key] = data;
     }
+    getRoomData = (key) => this._roomDatas[key];
+    getRoomDatas = () => this._roomDatas;
+    //
+    // プレイヤーデータ
     _setPlayerData(playerId, key, data) {
         if (!this._playerDatas[playerId]) {
             this._playerDatas[playerId] = {};
         }
         this._playerDatas[playerId][key] = data;
     }
-
+    getPlayerData = (playerId, key) => {
+        const playerData = this._playerDatas[playerId];
+        if (!playerData) return undefined;
+        return playerData[key];
+    };
+    getPlayerDatas = () => this._playerDatas.map(
+        item => {
+            const playerData = {
+                ...item,
+            };
+            delete playerData.playerId;
+            delete playerData.gameId;
+            return playerData;
+        },
+    );
+    getPlayerIds = () => Object.keys(this._playerDatas);
+    getPlayerNumber = () => Object.keys(this._playerDatas).length;
+    //
+    // 最初の画面のファイル名
     _setNowFileNameToSessionStorage() {
         sessionStorage.nowFileName = this._getNowFileName();
     }
     _getNowFileNameFromSessionStorage() {
         return sessionStorage.nowFileName;
     }
-
-    // 最初の画面
     _setFirstPage(firstPage) {
         sessionStorage.firstPage = firstPage;
     }
     getFirstPage = () => {
         return sessionStorage.firstPage;
     }
-
+    //
     // ゲームID
     _setGameId(gameId) {
         sessionStorage.gameId = gameId;
@@ -128,7 +148,7 @@ monoSocket.init( '最初の画面のファイル名', 'ゲームID' );
         }
         return gameId;
     }
-
+    //
     // プレイヤーID
     _setPlayerId(playerId) {
         if (playerId) {
@@ -157,7 +177,7 @@ monoSocket.init( '最初の画面のファイル名', 'ゲームID' );
             }
         }
     }
-
+    //
     // 部屋番号
     _setRoomNumber(roomNumber) {
         localStorage.roomNumber = roomNumber;
@@ -171,7 +191,7 @@ monoSocket.init( '最初の画面のファイル名', 'ゲームID' );
             return null;
         }
     }
-
+    //
     //#########################################################################################
     // ページ遷移
 
