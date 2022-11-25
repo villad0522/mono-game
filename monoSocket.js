@@ -286,7 +286,6 @@ monoSocket.init( '最初の画面のファイル名', 'ゲームID' );
     // 初期化処理
 
     init(firstPage, gameId) {
-        console.log('b');
         this.showLoader();
         if (!gameId) {
             this._showErrorMessage('関数 monoSocket.init() の引数に、ゲームIDが指定されていません。\n\n' + this._ERROR_MESSAGE__INIT);
