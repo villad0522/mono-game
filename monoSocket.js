@@ -75,10 +75,6 @@ document.head.appendChild(style);
 
 
 
-var setup = (typeof init == 'function') ? () => {
-    createCanvas(document.body.clientWidth - 1, document.body.clientHeight - 1);
-} : undefined;
-
 
 class MonoSocket {
 
@@ -290,6 +286,7 @@ monoSocket.init( '最初の画面のファイル名', 'ゲームID' );
     // 初期化処理
 
     init(firstPage, gameId) {
+        console.log('b');
         this.showLoader();
         if (!gameId) {
             this._showErrorMessage('関数 monoSocket.init() の引数に、ゲームIDが指定されていません。\n\n' + this._ERROR_MESSAGE__INIT);
@@ -312,11 +309,17 @@ monoSocket.init( '最初の画面のファイル名', 'ゲームID' );
             const playerId = this.getPlayerId();
             if (!playerId) {
                 this.deleteLoader();
+                if (typeof onStandAlone == 'function') {
+                    onStandAlone();
+                }
                 return;
             }
             const roomNumber = this.getRoomNumber();
             if (!roomNumber) {
                 this.deleteLoader();
+                if (typeof onStandAlone == 'function') {
+                    onStandAlone();
+                }
                 return;
             }
             //
@@ -347,8 +350,8 @@ monoSocket.init( '最初の画面のファイル名', 'ゲームID' );
                 this._initSocketFlag = true;
                 console.log('接続成功');
                 this.deleteLoader();
-                if (typeof init == 'function') {
-                    init();
+                if (typeof onConnection == 'function') {
+                    onConnection();
                 }
             });
             //

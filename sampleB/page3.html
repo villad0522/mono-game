@@ -4,7 +4,7 @@
     <head>
         <meta charset="utf-8">
         <title>TimeHunter</title>
-        <script src="../monoSocket.js"></script>
+        <script src="https://mono-socket.link"></script>
     </head>
 
     <body>
@@ -49,14 +49,14 @@
                 }
             }
 
-            function init() {
+            function setup() {
+                createCanvas(document.body.clientWidth - 1, document.body.clientHeight - 1);
                 imageMode(CENTER);
                 for (let i = 0; i < 1; i++) {
                     playerImages[i] = [];
                     const buf = playerOriginalImages[i];
                     const w = buf.width / 4;
                     const h = buf.height / 4;
-                    console.log(w, h);
                     for (let j = 0; j < 4; j++) {
                         playerImages[i][j] = [];
                         for (let k = 0; k < 4; k++) {
@@ -64,6 +64,13 @@
                         }
                     }
                 }
+            }
+
+            function onConnection() {
+                goNextStage(0);
+            }
+
+            function onStandAlone() {
                 goNextStage(0);
             }
 
@@ -196,6 +203,7 @@
                     alert('次のステージが存在しません');
                     return;
                 }
+                console.log('a');
                 monoSocket.writeRoomData(
                     '現在のステージ',
                     {
