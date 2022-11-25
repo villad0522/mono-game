@@ -304,26 +304,44 @@ monoSocket.init( '最初の画面のファイル名', 'ゲームID' );
         }
         this._setNowFileNameToSessionStorage();
         window.addEventListener('load', () => {  // 画面が読み込まれたタイミングで実行される処理
-            //
-            const playerId = this.getPlayerId();
-            if (!playerId) {
-                this.deleteLoader();
-                if (typeof onStandAlone == 'function') {
-                    onStandAlone();
+            try {
+                //
+                const playerId = this.getPlayerId();
+                if (!playerId) {
+                    this.deleteLoader();
+                    if (typeof onStandAlone == 'function') {
+                        onStandAlone();
+                    }
+                    return;
                 }
+                const roomNumber = this.getRoomNumber();
+                if (!roomNumber) {
+                    this.deleteLoader();
+                    if (typeof onStandAlone == 'function') {
+                        onStandAlone();
+                    }
+                    return;
+                }
+                //
+                console.log('ソケット通信開始');
+                this.socket = io.connect(`https://mono-socket.link/${gameId}/${roomNumber}`, 3);
+            }
+            catch (e) {
+                this._showErrorMessage(e);
+                this.deleteLoader();
                 return;
             }
-            const roomNumber = this.getRoomNumber();
-            if (!roomNumber) {
+            console.log('a');
+            this.socket.on("connect_error", () => {
+                this._showErrorMessage('接続失敗');
                 this.deleteLoader();
-                if (typeof onStandAlone == 'function') {
-                    onStandAlone();
-                }
                 return;
-            }
-            //
-            console.log('ソケット通信開始');
-            this.socket = io.connect(`https://mono-socket.link/${gameId}/${roomNumber}`);
+            });
+            this.socket.on("connect_timeout", () => {
+                this._showErrorMessage('接続失敗');
+                this.deleteLoader();
+                return;
+            });
             this.socket.on("connect", () => {
                 if (!this.socket.connect().connected) { // サーバに接続できたか
                     this._showErrorMessage('接続失敗');
@@ -359,6 +377,8 @@ monoSocket.init( '最初の画面のファイル名', 'ゲームID' );
             //
             // プレイヤーデータが変更されたときの処理
             this.socket.on('playerData', (playerId, key, data) => this._setPlayerData(playerId, key, data));
+
+
         });
     }
 
