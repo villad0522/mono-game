@@ -75,9 +75,9 @@ document.head.appendChild(style);
 
 
 
-function setup() {
+var setup = (typeof init == 'function') ? () => {
     createCanvas(document.body.clientWidth - 1, document.body.clientHeight - 1);
-}
+} : undefined;
 
 
 class MonoSocket {
