@@ -324,7 +324,7 @@ monoSocket.init( '最初の画面のファイル名', 'ゲームID' );
                 }
                 //
                 console.log('ソケット通信開始');
-                this.socket = io.connect(`https://mono-socket.link/${gameId}/${roomNumber}`, 3);
+                this.socket = io.connect(`https://mono-socket.link/${gameId}/${roomNumber}`);
             }
             catch (e) {
                 this._showErrorMessage(e);
