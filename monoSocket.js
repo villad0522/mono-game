@@ -304,9 +304,9 @@ monoSocket.init( '最初の画面のファイル名', 'ゲームID' );
         }
         this._setNowFileNameToSessionStorage();
         window.addEventListener('load', () => {  // 画面が読み込まれたタイミングで実行される処理
+            const playerId = this.getPlayerId();
             try {
                 //
-                const playerId = this.getPlayerId();
                 if (!playerId) {
                     this.deleteLoader();
                     if (typeof onStandAlone == 'function') {
