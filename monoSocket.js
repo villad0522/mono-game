@@ -1,5 +1,9 @@
 // http://mono-game.s3-website-ap-northeast-1.amazonaws.com
 
+// 戻るボタンが押された際、ページのJavaScriptを途中の状態から実行させない
+//    参考：http://nmi.jp/archives/273
+window.onunload = function () { };
+
 const style = document.createElement('style')
 style.innerHTML = `
     html {
@@ -23,6 +27,15 @@ style.innerHTML = `
         border: none;
         width: 100%;
         height: 100%;
+    }
+    .monoError {
+        position:absolute;
+        top:0px;
+        left:0px;
+        width:100%;
+        height:100%;
+        background-color:#fff;
+        z-index:999;
     }
     #monoSocketLoader {
         position:absolute;
@@ -74,15 +87,13 @@ document.head.appendChild(style);
 
 
 
-
-
 class MonoSocket {
 
     constructor() {
+        this.isOnline = false;
         this._roomDatas = {};
         this._playerDatas = {};
         this._sendInterval = 50;
-        this._initSocketFlag = false;
         this._ERROR_MESSAGE__INIT = `全ての画面の先頭で、以下の関数を実行する必要があります。
 
 monoSocket.init( '最初の画面のファイル名', 'ゲームID' );
@@ -113,6 +124,26 @@ monoSocket.init( '最初の画面のファイル名', 'ゲームID' );
     //#########################################################################################
     // ゲッター＆セッター
     //
+    // サーバー起動状況
+    _setServerIsRunning(isRunning) {
+        sessionStorage.isRunning = isRunning;
+    }
+    getServerIsRunning() {
+        return sessionStorage.isRunning;
+    }
+    //
+    // 準備完了かどうか
+    _setIsReady(isReady) {
+        this.isReady = isReady;
+    }
+    getIsReady = () => this.isReady;
+    //
+    // オンラインかどうか
+    _setIsOnline(isOnline) {
+        this.isOnline = isOnline;
+    }
+    getIsOnline = () => this.isOnline;
+    //
     // 部屋データ
     _setRoomData(key, data) {
         this._roomDatas[key] = data;
@@ -130,9 +161,19 @@ monoSocket.init( '最初の画面のファイル名', 'ゲームID' );
         }
         this._playerDatas[playerId][key] = data;
     }
-    getPlayerData = (playerId, key) => {
-        if (!playerId) {
-            playerId = 0;
+    getPlayerData = (...args) => {
+        let playerId = 0;
+        let key;
+        if (args.length == 1) {
+            playerId = this.getPlayerId();
+            key = args[0];
+        }
+        else if (args.length == 2) {
+            playerId = args[0];
+            key = args[1];
+            if (!playerId) {
+                playerId = 0;
+            }
         }
         const playerData = this._playerDatas[playerId];
         if (!playerData) return undefined;
@@ -252,6 +293,7 @@ monoSocket.init( '最初の画面のファイル名', 'ゲームID' );
     // ユーティリティ
 
     showLoader() {
+        console.log('読み込み開始');
         const divElement = document.createElement('div');
         divElement.id = 'monoSocketLoader';
         //
@@ -264,34 +306,35 @@ monoSocket.init( '最初の画面のファイル名', 'ゲームID' );
     }
 
     deleteLoader() {
+        console.log('読み込み終了');
         document.getElementById("monoSocketLoader").remove();
     }
 
     // エラーを表示
     _showErrorMessage(message) {
-        document.body.innerHTML = '<h3 style="color:red;">エラー</h3><textarea style="color:red;width:100%;height:70vh">' + message + '</textarea>';
-        const loginPage = this.getFirstPage();
-        if (loginPage != this._getNowFileName()) { // 現在、ログイン画面ではなかったら
-            window.setTimeout(() => {
-                this._goNextPage(loginPage);    // エラーを表示した３秒後にログイン画面に戻る
-            }, 3000);
-        }
-        else {
-            this.deleteLoader();
-            throw '\n\n' + message;
-        }
+        document.body.innerHTML += `
+            <div class="monoError">
+                <h3 style="color:red;">エラー</h3>
+                <textarea style="color:red;width:100%;height:70vh">${message}</textarea>
+            </div>
+        `;
+        this.deleteLoader();
+        throw '\n\n' + message;
     }
 
     //#########################################################################################
     // 初期化処理
 
     init(firstPage, gameId) {
+        this._setIsReady(false);
         this.showLoader();
         if (!gameId) {
             this._showErrorMessage('関数 monoSocket.init() の引数に、ゲームIDが指定されていません。\n\n' + this._ERROR_MESSAGE__INIT);
+            return;
         }
         if (!firstPage) {
             this._showErrorMessage('関数 monoSocket.init() の引数に、最初の画面のファイル名が指定されていません。\n\n' + this._ERROR_MESSAGE__INIT);
+            return;
         }
         this._setFirstPage(firstPage);
         this._setGameId(gameId);
@@ -304,26 +347,31 @@ monoSocket.init( '最初の画面のファイル名', 'ゲームID' );
         }
         this._setNowFileNameToSessionStorage();
         window.addEventListener('load', () => {  // 画面が読み込まれたタイミングで実行される処理
-            const playerId = this.getPlayerId();
+            const myPlayerId = this.getPlayerId();
+            const roomNumber = this.getRoomNumber();
             try {
-                //
-                if (!playerId) {
+                if (!myPlayerId) {
                     this.deleteLoader();
+                    this._setIsReady(true);
                     if (typeof onStandAlone == 'function') {
                         onStandAlone();
                     }
                     return;
                 }
-                const roomNumber = this.getRoomNumber();
                 if (!roomNumber) {
                     this.deleteLoader();
+                    this._setIsReady(true);
                     if (typeof onStandAlone == 'function') {
                         onStandAlone();
                     }
                     return;
                 }
-                //
-                console.log('ソケット通信開始');
+                if (!this.getServerIsRunning()) {
+                    this._setRoomNumber(undefined);
+                    alert('サーバーがスリープしていました。只今起動しておりますので、数分後にクリックしてください。');
+                    this._goNextPage(firstPage);
+                    return;
+                }
                 this.socket = io.connect(
                     `https://mono-socket.link/${gameId}/${roomNumber}`,
                     { 'timeout': 5000, 'connect_timeout': 5000 },
@@ -334,7 +382,6 @@ monoSocket.init( '最初の画面のファイル名', 'ゲームID' );
                 this.deleteLoader();
                 return;
             }
-            console.log('a');
             this.socket.on("connect_error", () => {
                 this._showErrorMessage('接続失敗');
                 this.deleteLoader();
@@ -351,12 +398,11 @@ monoSocket.init( '最初の画面のファイル名', 'ゲームID' );
                     this.deleteLoader();
                     return;
                 }
-                this.socket.emit('firstSend', playerId);
+                this.socket.emit('firstSend', myPlayerId);
             });
             //
             this.socket.on("disconnect", (message) => {
                 this._setRoomNumber(null);
-                console.log('切断されました');
                 this._goNextPage(firstPage);
             });
             //
@@ -365,11 +411,16 @@ monoSocket.init( '最初の画面のファイル名', 'ゲームID' );
                 this.deleteLoader();
             });
             //
-            this.socket.on("playerDatas", (playerDatas) => {
-                this._playerDatas = playerDatas;
-                this._initSocketFlag = true;
-                console.log('接続成功');
+            this.socket.on("playerDatas", (newPlayerDatas) => {
+                for (const playerId in newPlayerDatas) {
+                    this._playerDatas[playerId] = {
+                        ...this._playerDatas[playerId],
+                        ...newPlayerDatas[playerId],
+                    };
+                }
                 this.deleteLoader();
+                this._setIsOnline(true);
+                this._setIsReady(true);
                 if (typeof onConnection == 'function') {
                     onConnection();
                 }
@@ -379,7 +430,11 @@ monoSocket.init( '最初の画面のファイル名', 'ゲームID' );
             this.socket.on('roomData', (key, data) => this._setRoomData(key, data));
             //
             // プレイヤーデータが変更されたときの処理
-            this.socket.on('playerData', (playerId, key, data) => this._setPlayerData(playerId, key, data));
+            this.socket.on('playerData', (playerId, key, data) => {
+                if (playerId != myPlayerId) {
+                    this._setPlayerData(playerId, key, data);
+                }
+            });
 
 
         });
@@ -390,8 +445,10 @@ monoSocket.init( '最初の画面のファイル名', 'ゲームID' );
 
     // プレイヤー新規登録
     async signup(nextPage) {
+        console.log('signup');
         if (!nextPage) {
             this._showErrorMessage('関数 monoSocket.signup() の引数に、次の画面のファイル名が指定されていません。');
+            return;
         }
         this.showLoader();
         let res;
@@ -411,6 +468,7 @@ monoSocket.init( '最初の画面のファイル名', 'ゲームID' );
         }
         catch (e) {
             this._showErrorMessage(e);
+            return;
         }
         if (res.status != 200) {
             alert(res.statusText);
@@ -428,15 +486,19 @@ monoSocket.init( '最初の画面のファイル名', 'ゲームID' );
             this.deleteLoader();
             return;
         }
+        this._setServerIsRunning(isEC2running);
         this._setPlayerId(data.playerId);
         this._goNextPage(nextPage);    // 次のページへ進む
     }
 
     // ログイン
-    async signin(nextPage, playerId) {
+    async signin(nextPage) {
+        console.log('signin');
         if (!nextPage) {
             this._showErrorMessage('関数 monoSocket.signin() の引数に、次の画面のファイル名が指定されていません。');
+            return;
         }
+        const playerId = this.getPlayerId();
         if (!playerId) {
             alert('関数 monoSocket.signin() の第１引数に、プレイヤーIDが指定されていません。');
             return;
@@ -464,6 +526,7 @@ monoSocket.init( '最初の画面のファイル名', 'ゲームID' );
         }
         catch (e) {
             this._showErrorMessage(e);
+            return;
         }
         if (res.status != 200) {
             alert(res.statusText);
@@ -481,6 +544,7 @@ monoSocket.init( '最初の画面のファイル名', 'ゲームID' );
             this.deleteLoader();
             return;
         }
+        this._setServerIsRunning(isEC2running);
         this._setPlayerId(data.playerId);
         this._goNextPage(nextPage);    // 次のページへ進む
     }
@@ -492,6 +556,7 @@ monoSocket.init( '最初の画面のファイル名', 'ゲームID' );
         // 部屋を新たに作成する
         if (!nextPage) {
             this._showErrorMessage('関数 monoSocket.createRoom() の引数に、次の画面のファイル名が指定されていません。');
+            return;
         }
         this.showLoader();
         let res;
@@ -514,6 +579,7 @@ monoSocket.init( '最初の画面のファイル名', 'ゲームID' );
         }
         catch (e) {
             this._showErrorMessage(e);
+            return;
         }
         if (res.status != 200) {
             alert(res.statusText);
@@ -531,6 +597,7 @@ monoSocket.init( '最初の画面のファイル名', 'ゲームID' );
             this.deleteLoader();
             return;
         }
+        this._setServerIsRunning(isEC2running);
         var roomNumber;
         try {
             roomNumber = Number(data.roomNumber);
@@ -553,6 +620,7 @@ monoSocket.init( '最初の画面のファイル名', 'ゲームID' );
         // 既存の部屋に参加
         if (!nextPage) {
             this._showErrorMessage('関数 monoSocket.joinRoom() の引数に、次の画面のファイル名が指定されていません。');
+            return;
         }
         if (!roomNumber) {
             alert('部屋番号を入力してください');
@@ -586,6 +654,7 @@ monoSocket.init( '最初の画面のファイル名', 'ゲームID' );
         }
         catch (e) {
             this._showErrorMessage(e);
+            return;
         }
         if (res.status != 200) {
             alert(res.statusText);
@@ -603,6 +672,7 @@ monoSocket.init( '最初の画面のファイル名', 'ゲームID' );
             this.deleteLoader();
             return;
         }
+        this._setServerIsRunning(isEC2running);
         if (!isEC2running) {
             alert('サーバーがスリープしていました。只今起動しておりますので、数分後に再度クリックしてください。');
             this.deleteLoader();
@@ -647,16 +717,546 @@ monoSocket.init( '最初の画面のファイル名', 'ゲームID' );
     async forceWriteRoomData(key, data) {
         this._setRoomData(key, data);
         if (!this.socket) return;
-        if (!this._initSocketFlag) return;
+        if (!this.getIsOnline()) return;
         this.socket.emit('roomData', key, data);
     }
 
     async forceWritePlayerData(playerId, key, data) {
         this._setPlayerData(playerId, key, data);
         if (!this.socket) return;
-        if (!this._initSocketFlag) return;
+        if (!this.getIsOnline()) return;
         if (!playerId) return;
         this.socket.emit('playerData', playerId, key, data);
     }
 };
 var monoSocket = new MonoSocket();
+
+
+const UP = 0;
+const RIGHT = 1;
+const LEFT = 2;
+const DOWN = 3;
+
+class MonoTile2D {
+    constructor() {
+        this.tileSize = undefined;
+        this.groundMatrices = {};
+        this.groundOriginalImages = {};
+        this.groundPass = {};
+        this.groundImages = {};
+        this.playerOriginalImages = {};
+        this.playerImages = {};
+    }
+    // エラーを表示
+    _showErrorMessage(message) {
+        document.body.innerHTML += `
+            <div class="monoError">
+                <h3 style="color:red;">エラー</h3>
+                <textarea style="color:red;width:100%;height:70vh">${message}</textarea>
+            </div>
+        `;
+        throw '\n\n' + message;
+    }
+    //
+    // プレイヤーの現在位置
+    getMapKey(playerId) {
+        if (playerId) {
+            const coordinate = monoSocket.getPlayerData(playerId, "位置");
+            if (!coordinate) return undefined;
+            return coordinate.mapKey;
+        }
+        else {
+            const coordinate = monoSocket.getPlayerData("位置");
+            if (!coordinate) {
+                return undefined;
+            }
+            return coordinate.mapKey;
+        }
+    }
+    getX(playerId) {
+        if (playerId) {
+            const coordinate = monoSocket.getPlayerData(playerId, "位置");
+            if (!coordinate) return undefined;
+            return coordinate.x;
+        }
+        else {
+            const coordinate = monoSocket.getPlayerData("位置");
+            if (!coordinate) return undefined;
+            return coordinate.x;
+        }
+    }
+    getY(playerId) {
+        if (playerId) {
+            const coordinate = monoSocket.getPlayerData(playerId, "位置");
+            if (!coordinate) return undefined;
+            return coordinate.y;
+        }
+        else {
+            const coordinate = monoSocket.getPlayerData("位置");
+            if (!coordinate) return undefined;
+            return coordinate.y;
+        }
+    }
+    getDirection(playerId) {
+        if (playerId) {
+            const coordinate = monoSocket.getPlayerData(playerId, "位置");
+            if (!coordinate) return DOWN;
+            return coordinate.direction;
+        }
+        else {
+            const coordinate = monoSocket.getPlayerData("位置");
+            if (!coordinate) return DOWN;
+            return coordinate.direction;
+        }
+    }
+    setCoordinate(...args) {
+        let playerId;
+        let mapKey;
+        let x;
+        let y;
+        let direction;
+        if (args.length == 5) {
+            playerId = args[0];
+            mapKey = args[1];
+            x = args[2];
+            y = args[3];
+            direction = args[4];
+        }
+        else if (args.length == 4) {
+            playerId = monoSocket.getPlayerId();
+            mapKey = args[0];
+            x = args[1];
+            y = args[2];
+            direction = args[3];
+        }
+        monoSocket.writePlayerData(
+            playerId,
+            '位置',
+            {
+                mapKey: mapKey,
+                x: x,
+                y: y,
+                direction: direction,
+            },
+        );
+    }
+    //
+    // タイルサイズ
+    setTileSizeByPercentage(percentage) {
+        this.tileSize = ((width < height) ? width : height) / 100 * percentage;
+    }
+    setTileSize(tileSize) {
+        this.tileSize = tileSize;
+    }
+    getTileSize = () => this.tileSize;
+    //
+    // プレイヤー画像
+    clearPlayerImages(playerImageNumber) {
+        // 引数のチェック
+        if (typeof playerImageNumber != 'number') {
+            this._showErrorMessage(`関数「monoTile2D.${this.clearPlayerImages.name}()」の第１引数「playerImageNumber」に${typeof playerImageNumber}型の値が指定されています。number型の値を指定してください。`);
+            return;
+        }
+        //
+        this.playerImages[playerImageNumber] = {};
+    }
+    loadPlayerImage(playerImageNumber, direction, fileName, xSplitNumber = 1, ySplitNumber = 1, xNumber = 0, yNumber = 0) {
+        // 引数のチェック
+        if (typeof playerImageNumber != 'number') {
+            this._showErrorMessage(`関数「monoTile2D.${this.loadPlayerImage.name}()」の第１引数「playerImageNumber」に${typeof playerImageNumber}型の値が指定されています。number型の値を指定してください。`);
+            return;
+        }
+        if (typeof fileName != 'string') {
+            this._showErrorMessage(`関数「monoTile2D.${this.loadPlayerImage.name}()」の第３引数「fileName」に${typeof fileName}型の値が指定されています。string型の値を指定してください。`);
+            return;
+        }
+        if (typeof xSplitNumber != 'number') {
+            this._showErrorMessage(`関数「monoTile2D.${this.loadPlayerImage.name}()」の第４引数「xSplitNumber」に${typeof xSplitNumber}型の値が指定されています。number型の値を指定してください。`);
+            return;
+        }
+        if (typeof ySplitNumber != 'number') {
+            this._showErrorMessage(`関数「monoTile2D.${this.loadPlayerImage.name}()」の第５引数「ySplitNumber」に${typeof ySplitNumber}型の値が指定されています。number型の値を指定してください。`);
+            return;
+        }
+        if (typeof xNumber != 'number') {
+            this._showErrorMessage(`関数「monoTile2D.${this.loadPlayerImage.name}()」の第６引数「xNumber」に${typeof xNumber}型の値が指定されています。number型の値を指定してください。`);
+            return;
+        }
+        if (typeof yNumber != 'number') {
+            this._showErrorMessage(`関数「monoTile2D.${this.loadPlayerImage.name}()」の第７引数「yNumber」に${typeof yNumber}型の値が指定されています。number型の値を指定してください。`);
+            return;
+        }
+        if (xNumber >= xSplitNumber) {
+            this._showErrorMessage(`関数「monoTile2D.${this.loadPlayerImage.name}()」の第６引数「xNumber」に、画像の分割数「xSplitNumber」よりも大きな数値が指定されています。`);
+            return;
+        }
+        if (yNumber >= ySplitNumber) {
+            this._showErrorMessage(`関数「monoTile2D.${this.loadPlayerImage.name}()」の第７引数「yNumber」に、画像の分割数「ySplitNumber」よりも大きな数値が指定されています。`);
+            return;
+        }
+        if (xNumber < 0) {
+            this._showErrorMessage(`関数「monoTile2D.${this.loadPlayerImage.name}()」の第６引数「xNumber」に、、マイナスの数値が指定されています。`);
+            return;
+        }
+        if (yNumber < 0) {
+            this._showErrorMessage(`関数「monoTile2D.${this.loadPlayerImage.name}()」の第７引数「yNumber」に、、マイナスの数値が指定されています。`);
+            return;
+        }
+        // 引数のチェックここまで
+        //
+        const loadSplitImage = (origin) => {
+            if (!this.playerImages[playerImageNumber]) {
+                this.playerImages[playerImageNumber] = {};
+            }
+            if (!this.playerImages[playerImageNumber][direction]) {
+                this.playerImages[playerImageNumber][direction] = [];
+            }
+            if (xSplitNumber == 1 && ySplitNumber == 1 && xNumber == 0 && yNumber == 0) {
+                // 画像を切り抜かずに読み込む場合
+                this.playerImages[playerImageNumber][direction].push(origin);   //アニメーションにコマを追加
+            }
+            else {
+                // 画像を切り抜いて読み込む場合
+                const w = origin.width / xSplitNumber;  //切り抜いた後の画像の幅
+                const h = origin.height / ySplitNumber;  //切り抜いた後の画像の高さ
+                const croppedImage = origin.get(xNumber * w, yNumber * h, w, h);    //画像を切り抜く
+                this.playerImages[playerImageNumber][direction].push(croppedImage);   //アニメーションにコマを追加
+            }
+        }
+        //
+        if (this.playerOriginalImages[fileName]) {
+            // 既にオリジナル画像の読み込みが完了している場合
+            const origin = this.playerOriginalImages[fileName];
+            loadSplitImage(origin);
+        }
+        else {
+            // オリジナル画像を読み込む
+            loadImage(fileName, (origin) => {
+                this.playerOriginalImages[fileName] = origin;
+                loadSplitImage(origin);
+            });
+        }
+    }
+    //
+    // 地面の画像
+    loadGroundImage(tileNumber, pass, fileName, xSplitNumber = 1, ySplitNumber = 1, xNumber = 0, yNumber = 0) {
+        // 引数のチェック
+        if (typeof tileNumber != 'number') {
+            this._showErrorMessage(`関数「monoTile2D.${this.loadGroundImage.name}()」の第１引数「tileNumber」に${typeof tileNumber}型の値が指定されています。number型の値を指定してください。`);
+            return;
+        }
+        if (typeof fileName != 'string') {
+            this._showErrorMessage(`関数「monoTile2D.${this.loadGroundImage.name}()」の第３引数「fileName」に${typeof fileName}型の値が指定されています。string型の値を指定してください。`);
+            return;
+        }
+        if (typeof xSplitNumber != 'number') {
+            this._showErrorMessage(`関数「monoTile2D.${this.loadGroundImage.name}()」の第４引数「xSplitNumber」に${typeof xSplitNumber}型の値が指定されています。number型の値を指定してください。`);
+            return;
+        }
+        if (typeof ySplitNumber != 'number') {
+            this._showErrorMessage(`関数「monoTile2D.${this.loadGroundImage.name}()」の第５引数「ySplitNumber」に${typeof ySplitNumber}型の値が指定されています。number型の値を指定してください。`);
+            return;
+        }
+        if (typeof xNumber != 'number') {
+            this._showErrorMessage(`関数「monoTile2D.${this.loadGroundImage.name}()」の第６引数「xNumber」に${typeof xNumber}型の値が指定されています。number型の値を指定してください。`);
+            return;
+        }
+        if (typeof yNumber != 'number') {
+            this._showErrorMessage(`関数「monoTile2D.${this.loadGroundImage.name}()」の第７引数「yNumber」に${typeof yNumber}型の値が指定されています。number型の値を指定してください。`);
+            return;
+        }
+        if (xNumber >= xSplitNumber) {
+            this._showErrorMessage(`関数「monoTile2D.${this.loadGroundImage.name}()」の第６引数「xNumber」に、画像の分割数「xSplitNumber」よりも大きな数値が指定されています。`);
+            return;
+        }
+        if (yNumber >= ySplitNumber) {
+            this._showErrorMessage(`関数「monoTile2D.${this.loadGroundImage.name}()」の第７引数「yNumber」に、画像の分割数「ySplitNumber」よりも大きな数値が指定されています。`);
+            return;
+        }
+        if (xNumber < 0) {
+            this._showErrorMessage(`関数「monoTile2D.${this.loadGroundImage.name}()」の第６引数「xNumber」に、、マイナスの数値が指定されています。`);
+            return;
+        }
+        if (yNumber < 0) {
+            this._showErrorMessage(`関数「monoTile2D.${this.loadGroundImage.name}()」の第７引数「yNumber」に、、マイナスの数値が指定されています。`);
+            return;
+        }
+        // 引数のチェックここまで
+        //
+        // オリジナル画像を読み込む
+        if (!this.groundOriginalImages[fileName]) {
+            this.groundOriginalImages[fileName] = loadImage(fileName);
+        }
+        const origin = this.groundOriginalImages[fileName];
+        //
+        if (!this.groundImages[tileNumber]) {
+            this.groundImages[tileNumber] = [];
+        }
+        this.groundPass[tileNumber] = pass; //通行許可を保存
+        if (xSplitNumber == 1 && ySplitNumber == 1 && xNumber == 0 && yNumber == 0) {
+            // 画像を切り抜かずに読み込む場合
+            this.groundImages[tileNumber].push(origin);   //アニメーションにコマを追加
+        }
+        else {
+            // 画像を切り抜いて読み込む場合
+            const w = origin.width / xSplitNumber;  //切り抜いた後の画像の幅
+            const h = origin.height / ySplitNumber;  //切り抜いた後の画像の高さ
+            const croppedImage = origin.get(xNumber * w, yNumber * h, w, h);    //画像を切り抜く
+            this.groundImages[tileNumber].push(croppedImage);   //アニメーションにコマを追加
+        }
+    }
+    //
+    // 地面の情報
+    setGround(mapKey, layerNumber, ...args) {
+        if (typeof mapKey != 'string') {
+            this._showErrorMessage(`関数「monoTile2D.${this.setGround.name}()」の第１引数「mapKey」に${typeof mapKey}型の値が指定されています。string型の値を指定してください。`);
+            return;
+        }
+        if (typeof layerNumber != 'number') {
+            this._showErrorMessage(`関数「monoTile2D.${this.setGround.name}()」の第２引数「layerNumber」に${typeof layerNumber}型の値が指定されています。number型の値を指定してください。`);
+            return;
+        }
+        if (!this.groundMatrices[mapKey]) {
+            this.groundMatrices[mapKey] = {
+                width: 0,
+                height: 0,
+            };
+        }
+        if ((args.length > 0) && Array.isArray(args[0])) {
+            this.groundMatrices[mapKey][layerNumber] = args;
+            if (args.length > this.groundMatrices[mapKey].height) {
+                this.groundMatrices[mapKey].height = args.length;
+            }
+            for (const row of args) {
+                if (row.length > this.groundMatrices[mapKey].width) {
+                    this.groundMatrices[mapKey].width = row.length;
+                }
+            }
+        }
+        else if ((args.length == 3) && (typeof args[0] == 'number')) {
+            const xNumber = args[0];
+            const yNumber = args[1];
+            const tileNumber = args[2];
+            if (typeof xNumber != 'number') {
+                this._showErrorMessage(`関数「monoTile2D.${this.setGround.name}()」の第３引数「xNumber」に${typeof xNumber}型の値が指定されています。number型の値を指定してください。`);
+                return;
+            }
+            if (typeof yNumber != 'number') {
+                this._showErrorMessage(`関数「monoTile2D.${this.setGround.name}()」の第４引数「yNumber」に${typeof yNumber}型の値が指定されています。number型の値を指定してください。`);
+                return;
+            }
+            if (typeof tileNumber != 'number') {
+                this._showErrorMessage(`関数「monoTile2D.${this.setGround.name}()」の第５引数「tileNumber」に${typeof tileNumber}型の値が指定されています。number型の値を指定してください。`);
+                return;
+            }
+            if (!groundImages[tileNumber]) {
+                this._showErrorMessage(`関数「monoTile2D.${this.setGround.name}()」の第５引数「tileNumber」に存在しないタイル番号「${tileNumber}」が指定されています。先に「${this.loadGroundImage.name}()」を実行してください。`);
+                return;
+            }
+            if (!this.groundMatrices[mapKey][layerNumber]) {
+                this.groundMatrices[mapKey][layerNumber] = [];
+            }
+            if (!this.groundMatrices[mapKey][layerNumber][yNumber]) {
+                this.groundMatrices[mapKey][layerNumber][yNumber] = [];
+            }
+            this.groundMatrices[mapKey][layerNumber][yNumber][xNumber] = tileNumber;
+            //
+            if (xNumber > this.groundMatrices[mapKey].width) {
+                this.groundMatrices[mapKey].width = xNumber;
+            }
+            if (yNumber > this.groundMatrices[mapKey].height) {
+                this.groundMatrices[mapKey].height = yNumber;
+            }
+        }
+        else {
+            this._showErrorMessage(`関数「monoTile2D.${this.setGround.name}()」に無効な引数が指定されています`);
+            return;
+        }
+    }
+    getGround(mapKey, layerNumber, xNumber, yNumber) {
+        if (typeof mapKey != 'string') {
+            this._showErrorMessage(`関数「monoTile2D.${this.getGround.name}()」の第１引数「mapKey」に${typeof mapKey}型の値が指定されています。string型の値を指定してください。`);
+            return;
+        }
+        if (typeof layerNumber != 'number') {
+            this._showErrorMessage(`関数「monoTile2D.${this.setGround.name}()」の第２引数「layerNumber」に${typeof layerNumber}型の値が指定されています。number型の値を指定してください。`);
+            return;
+        }
+        if (typeof xNumber != 'number') {
+            this._showErrorMessage(`関数「monoTile2D.${this.getGround.name}()」の第３引数「xNumber」に${typeof xNumber}型の値が指定されています。number型の値を指定してください。`);
+            return;
+        }
+        if (typeof yNumber != 'number') {
+            this._showErrorMessage(`関数「monoTile2D.${this.getGround.name}()」の第４引数「yNumber」に${typeof yNumber}型の値が指定されています。number型の値を指定してください。`);
+            return;
+        }
+        if (!this.groundMatrices[mapKey]) return undefined;
+        if (!this.groundMatrices[mapKey][layerNumber]) return undefined;
+        if (!this.groundMatrices[mapKey][layerNumber][yNumber]) return undefined;
+        return this.groundMatrices[mapKey][layerNumber][yNumber][xNumber];
+    }
+    getPass(mapKey, xNumber, yNumber) {
+        if (typeof mapKey != 'string') {
+            this._showErrorMessage(`関数「monoTile2D.${this.getPass.name}()」の第１引数「mapKey」に${typeof mapKey}型の値が指定されています。string型の値を指定してください。`);
+            return;
+        }
+        if (typeof xNumber != 'number') {
+            this._showErrorMessage(`関数「monoTile2D.${this.getPass.name}()」の第２引数「xNumber」に${typeof xNumber}型の値が指定されています。number型の値を指定してください。`);
+            return;
+        }
+        if (typeof yNumber != 'number') {
+            this._showErrorMessage(`関数「monoTile2D.${this.getPass.name}()」の第３引数「yNumber」に${typeof yNumber}型の値が指定されています。number型の値を指定してください。`);
+            return;
+        }
+        if (!this.groundMatrices[mapKey]) return undefined;
+        for (let layerNumber in this.groundMatrices[mapKey]) {
+            if (isNaN(layerNumber)) continue;
+            layerNumber = Number(layerNumber);
+            if (layerNumber >= 10) continue;
+            if (!this.groundMatrices[mapKey][layerNumber][yNumber]) continue;
+            const tileNumber = this.groundMatrices[mapKey][layerNumber][yNumber][xNumber];
+            if (typeof tileNumber != 'number') continue;
+            if (!this.groundPass[tileNumber]) {
+                return false;    //通行不可
+            }
+        }
+        return true;    //通行可
+    }
+    //
+    // 描画処理
+    _drawTile(layerNumber, xNumber, yNumber) {
+        if (isNaN(layerNumber)) return;
+        layerNumber = Number(layerNumber);
+        const myCoordinate = monoSocket.getPlayerData("位置");
+        if (!myCoordinate) return;
+        const tileNumber = this.getGround(myCoordinate.mapKey, layerNumber, xNumber, yNumber);
+        if (typeof tileNumber != 'number') return;
+        const images = this.groundImages[tileNumber];
+        if (!Array.isArray(images)) return;
+        const img = images[0];
+        const tileSize = this.getTileSize();
+        const mapX = (width / 2) - (myCoordinate.x * tileSize);    //画面上における、マップの左上の座標
+        const mapY = (height / 2) - (myCoordinate.y * tileSize);    //画面上における、マップの左上の座標
+        image(
+            img,
+            mapX + (xNumber * tileSize),
+            mapY + (yNumber * tileSize),
+            tileSize,
+            tileSize,
+        );
+    }
+    _drawPlayers(layerNumber, yNumber) {
+        if (isNaN(layerNumber)) return;
+        layerNumber = Number(layerNumber);
+        const myCoordinate = monoSocket.getPlayerData("位置");
+        if (!myCoordinate) return;
+        for (const playerId of monoSocket.getPlayerIds()) {
+            const coordinate = monoSocket.getPlayerData(playerId, "位置");
+            if (!coordinate) continue;
+            if (Math.floor(coordinate.y) != yNumber) continue;
+            const tileSize = this.getTileSize();
+            const mapX = (width / 2) - (myCoordinate.x * tileSize);    //画面上における、マップの左上の座標
+            const mapY = (height / 2) - (myCoordinate.y * tileSize);    //画面上における、マップの左上の座標
+            const animeSpeed = 2;
+            const walk = Math.floor(((coordinate.x + coordinate.y) % animeSpeed) / animeSpeed * 4);
+            const img = this.playerImages[0][coordinate.direction][walk];
+            image(
+                img,
+                mapX + (coordinate.x * tileSize),
+                mapY + (coordinate.y * tileSize),
+                tileSize / img.height * img.width,
+                tileSize,
+            );
+        }
+    }
+    _move() {
+        const myCoordinate = monoSocket.getPlayerData("位置");
+        if (!myCoordinate) return;
+        let mapKey = myCoordinate.mapKey;
+        let x = myCoordinate.x;
+        let y = myCoordinate.y;
+        let direction = myCoordinate.direction;
+        if (keyIsPressed) {
+            const speed = 0.3;
+            if (key === "w" || keyCode === UP_ARROW) {
+                y -= speed;
+                direction = UP;
+            }
+            else if (key === "s" || keyCode === DOWN_ARROW) {
+                y += speed;
+                direction = DOWN;
+            }
+            else if (key === "d" || keyCode === RIGHT_ARROW) {
+                x += speed;
+                direction = RIGHT;
+            }
+            else if (key === "a" || keyCode === LEFT_ARROW) {
+                x -= speed;
+                direction = LEFT;
+            }
+            let x1 = Math.round(x);
+            let x2 = x1;
+            if (x1 < x) {
+                x2 = Math.ceil(x);
+            }
+            else if (x < x1) {
+                x1 = Math.floor(x);
+            }
+            let y1 = Math.round(y);
+            let y2 = y1;
+            if (y1 < y) {
+                y2 = Math.ceil(y);
+            }
+            else if (y < y1) {
+                y1 = Math.floor(y);
+            }
+            if (
+                this.getPass(mapKey, x1, y1) == false ||
+                this.getPass(mapKey, x2, y1) == false ||
+                this.getPass(mapKey, x1, y2) == false ||
+                this.getPass(mapKey, x2, y2) == false
+            ) {
+                x = Math.round(x);
+                y = Math.round(y);
+            }
+        }
+        this.setCoordinate(mapKey, x, y, direction);
+    }
+    draw() {
+        if (this.getTileSize() == undefined) {
+            if (monoSocket.getIsReady()) {
+                this.setTileSizeByPercentage(10);
+            }
+            else {
+                return;
+            }
+        }
+        imageMode(CENTER);
+        this._move();   //移動
+        //
+        // マップを描画
+        const layers = this.groundMatrices[this.getMapKey()];
+        if (!layers) {
+            return;
+        }
+        const layerNumbers = Object.keys(layers);
+        if (!layerNumbers.includes(0)) {
+            layerNumbers.push(0);
+        }
+        layerNumbers.sort();
+        //
+        for (const layerNumber of layerNumbers) {
+            for (let i = 0; i < layers.height; i++) {
+                for (let j = 0; j < layers.width; j++) {
+                    this._drawTile(layerNumber, j, i);
+                }
+                if (layerNumber == 0) {
+                    this._drawPlayers(layerNumber, i);
+                }
+            }
+        }
+    }
+
+}
+
+var monoTile2D = new MonoTile2D();

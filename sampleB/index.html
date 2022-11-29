@@ -5,7 +5,8 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
         <title>TimeHunter</title>
-        <script src="https://mono-socket.link"></script>
+        <!-- <script src="https://mono-socket.link"></script> -->
+        <script src="../monoSocket.js"></script>
         <style>
             html {
                 background: #000;
@@ -26,13 +27,13 @@
         <br>
         <img class="title-logo" src="./img/title.png">
         <hr>
-        <button id="button1-3">ひとりで</button>
+        <button onclick="button1()">ひとりで</button>
         <br>
         <br>
-        <button id="button1-1">はじめから</button>
+        <button onclick="button2()">はじめから</button>
         <br>
         <br>
-        <button id="button1-2">続きから</button>
+        <button onclick="button3()">続きから</button>
         <br>
         <br>
         <br>
@@ -40,29 +41,19 @@
         <script>
             monoSocket.init('index.html', 'cd02a276-44d2-44aa-b04b-7ddc26be5dba');
 
-            document.getElementById("button1-3").addEventListener('click', () => {
+            function button1() {
                 // 「ひとりで」ボタンが押されたときの処理
                 monoSocket.signup('page3.html');
-            });
+            }
 
-            document.getElementById("button1-1").addEventListener('click', () => {
+            function button2() {
                 // 「はじめから」ボタンが押されたときの処理
                 monoSocket.signup('page2.html');
-            });
-
-
-            const playerId = monoSocket.getPlayerId();
-            if (playerId) {
-                // URLに前回のログイン情報が残っていた場合
-                document.getElementById("button1-2").addEventListener('click', () => {
-                    // 「続きから」ボタンが押されたときの処理
-                    monoSocket.signin('page2.html', playerId);  // ログイン
-                });
             }
-            else {
-                // URLに前回のログイン情報が残っていなかった場合
-                // 「続きから」ボタンを押せないようにする
-                document.getElementById("button1-2").disabled = true;
+
+            function button3() {
+                // 「続きから」ボタンが押されたときの処理
+                monoSocket.signin('page2.html');
             }
         </script>
     </body>
