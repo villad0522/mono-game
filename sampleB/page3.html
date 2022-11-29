@@ -4,8 +4,7 @@
     <head>
         <meta charset="utf-8">
         <title>TimeHunter</title>
-        <!-- <script src="https://mono-socket.link"></script> -->
-        <script src="../monoSocket.js"></script>
+        <script src="https://mono-socket.link"></script>
     </head>
 
     <body>
@@ -60,6 +59,8 @@
             function draw() {
                 background(0);
                 monoTile2D.draw();
+                fill(255);
+                stroke(255);
                 text(`部屋番号：${roomNumber ?? '？'}`, 30, 30);
             }
 
