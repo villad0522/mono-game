@@ -740,11 +740,10 @@ const DOWN = 3;
 class MonoTile2D {
     constructor() {
         this.tileSize = undefined;
+        this.originalImages = {};
         this.groundMatrices = {};
-        this.groundOriginalImages = {};
         this.groundPass = {};
         this.groundImages = {};
-        this.playerOriginalImages = {};
         this.playerImages = {};
     }
     // エラーを表示
@@ -904,13 +903,14 @@ class MonoTile2D {
         }
         // 引数のチェックここまで
         //
+        if (!this.playerImages[playerImageNumber]) {
+            this.playerImages[playerImageNumber] = {};
+        }
+        if (!this.playerImages[playerImageNumber][direction]) {
+            this.playerImages[playerImageNumber][direction] = [];
+        }
+        //
         const loadSplitImage = (origin) => {
-            if (!this.playerImages[playerImageNumber]) {
-                this.playerImages[playerImageNumber] = {};
-            }
-            if (!this.playerImages[playerImageNumber][direction]) {
-                this.playerImages[playerImageNumber][direction] = [];
-            }
             if (xSplitNumber == 1 && ySplitNumber == 1 && xNumber == 0 && yNumber == 0) {
                 // 画像を切り抜かずに読み込む場合
                 this.playerImages[playerImageNumber][direction].push(origin);   //アニメーションにコマを追加
@@ -924,15 +924,15 @@ class MonoTile2D {
             }
         }
         //
-        if (this.playerOriginalImages[fileName]) {
+        if (this.originalImages[fileName]) {
             // 既にオリジナル画像の読み込みが完了している場合
-            const origin = this.playerOriginalImages[fileName];
+            const origin = this.originalImages[fileName];
             loadSplitImage(origin);
         }
         else {
             // オリジナル画像を読み込む
             loadImage(fileName, (origin) => {
-                this.playerOriginalImages[fileName] = origin;
+                this.originalImages[fileName] = origin;
                 loadSplitImage(origin);
             });
         }
@@ -983,26 +983,36 @@ class MonoTile2D {
         }
         // 引数のチェックここまで
         //
-        // オリジナル画像を読み込む
-        if (!this.groundOriginalImages[fileName]) {
-            this.groundOriginalImages[fileName] = loadImage(fileName);
-        }
-        const origin = this.groundOriginalImages[fileName];
-        //
         if (!this.groundImages[tileNumber]) {
             this.groundImages[tileNumber] = [];
         }
         this.groundPass[tileNumber] = pass; //通行許可を保存
-        if (xSplitNumber == 1 && ySplitNumber == 1 && xNumber == 0 && yNumber == 0) {
-            // 画像を切り抜かずに読み込む場合
-            this.groundImages[tileNumber].push(origin);   //アニメーションにコマを追加
+        //
+        const loadSplitImage = (origin) => {
+            if (xSplitNumber == 1 && ySplitNumber == 1 && xNumber == 0 && yNumber == 0) {
+                // 画像を切り抜かずに読み込む場合
+                this.groundImages[tileNumber].push(origin);   //アニメーションにコマを追加
+            }
+            else {
+                // 画像を切り抜いて読み込む場合
+                const w = origin.width / xSplitNumber;  //切り抜いた後の画像の幅
+                const h = origin.height / ySplitNumber;  //切り抜いた後の画像の高さ
+                const croppedImage = origin.get(xNumber * w, yNumber * h, w, h);    //画像を切り抜く
+                this.groundImages[tileNumber].push(croppedImage);   //アニメーションにコマを追加
+            }
+        }
+        //
+        if (this.originalImages[fileName]) {
+            // 既にオリジナル画像の読み込みが完了している場合
+            const origin = this.originalImages[fileName];
+            loadSplitImage(origin);
         }
         else {
-            // 画像を切り抜いて読み込む場合
-            const w = origin.width / xSplitNumber;  //切り抜いた後の画像の幅
-            const h = origin.height / ySplitNumber;  //切り抜いた後の画像の高さ
-            const croppedImage = origin.get(xNumber * w, yNumber * h, w, h);    //画像を切り抜く
-            this.groundImages[tileNumber].push(croppedImage);   //アニメーションにコマを追加
+            // オリジナル画像を読み込む
+            loadImage(fileName, (origin) => {
+                this.originalImages[fileName] = origin;
+                loadSplitImage(origin);
+            });
         }
     }
     //
