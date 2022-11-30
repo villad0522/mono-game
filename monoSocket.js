@@ -327,7 +327,7 @@ monoSocket.init( '最初の画面のファイル名', 'ゲームID' );
 
     init(firstPage, gameId) {
         this._setIsReady(false);
-        this.showLoader();
+        //this.showLoader();
         if (!gameId) {
             this._showErrorMessage('関数 monoSocket.init() の引数に、ゲームIDが指定されていません。\n\n' + this._ERROR_MESSAGE__INIT);
             return;
@@ -974,11 +974,11 @@ class MonoTile2D {
             return;
         }
         if (xNumber < 0) {
-            this._showErrorMessage(`関数「monoTile2D.${this.loadGroundImage.name}()」の第６引数「xNumber」に、、マイナスの数値が指定されています。`);
+            this._showErrorMessage(`関数「monoTile2D.${this.loadGroundImage.name}()」の第６引数「xNumber」に、マイナスの数値が指定されています。`);
             return;
         }
         if (yNumber < 0) {
-            this._showErrorMessage(`関数「monoTile2D.${this.loadGroundImage.name}()」の第７引数「yNumber」に、、マイナスの数値が指定されています。`);
+            this._showErrorMessage(`関数「monoTile2D.${this.loadGroundImage.name}()」の第７引数「yNumber」に、マイナスの数値が指定されています。`);
             return;
         }
         // 引数のチェックここまで
