@@ -60,7 +60,11 @@ style.innerHTML = `
         height: 100px;
     }
 `;
-document.head.appendChild(style);
+
+try {
+    document.head.appendChild(style);
+}
+catch (e) { }
 
 /*!
  * Socket.IO v4.5.0
@@ -302,12 +306,18 @@ monoSocket.init( '最初の画面のファイル名', 'ゲームID' );
         imgElement.alt = '読み込み中'; // 代替テキスト
         //
         divElement.appendChild(imgElement);
-        document.body.appendChild(divElement);
+        try {
+            document.body.appendChild(divElement);
+        }
+        catch (e) { }
     }
 
     deleteLoader() {
         console.log('読み込み終了');
-        document.getElementById("monoSocketLoader").remove();
+        try {
+            document.getElementById("monoSocketLoader").remove();
+        }
+        catch (e) { }
     }
 
     // エラーを表示
