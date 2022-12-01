@@ -9,13 +9,25 @@
         <style>
             html {
                 background: #000;
+                color: #fff;
+                text-align: center;
             }
 
             .title-logo {
                 display: block;
-                width: 60%;
                 min-width: 300px;
-                max-width: 90%;
+                width: 70%;
+                max-width: 600px;
+                border: 10px solid #000;
+                margin: 0 auto;
+            }
+
+            .screenshot {
+                display: block;
+                min-width: 200px;
+                width: 40%;
+                max-width: 300px;
+                border: 20px solid #000;
                 margin: 0 auto;
             }
 
@@ -24,33 +36,26 @@
 
     <body>
         <br>
+        <br>
+        <br>
         <img class="title-logo" src="./img/title.png">
-        <hr>
-        <button onclick="button1()">ひとりで</button>
         <br>
         <br>
-        <button onclick="button2()">はじめから</button>
+        <img class="screenshot" src="./img/screenshot.png">
         <br>
         <br>
-        <button onclick="button3()">続きから</button>
-        <br>
-        <br>
-        <br>
-        <hr>
+        <button onclick="button1()" class="mono">はじめから</button>
+        <button onclick="button2()" class="mono">続きから</button>
         <script>
             monoSocket.init('index.html', 'cd02a276-44d2-44aa-b04b-7ddc26be5dba');
 
-            function button1() {
-                // 「ひとりで」ボタンが押されたときの処理
-                monoSocket.signup('page3.html');
-            }
 
-            function button2() {
+            function button1() {
                 // 「はじめから」ボタンが押されたときの処理
                 monoSocket.signup('page2.html');
             }
 
-            function button3() {
+            function button2() {
                 // 「続きから」ボタンが押されたときの処理
                 monoSocket.signin('page2.html');
             }

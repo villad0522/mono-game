@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+        <title>TimeHunter</title>
+        <script src="https://mono-socket.link"></script>
+    </head>
+
+    <body>
+        <script>
+            var img;
+
+            function setup() {
+                createCanvas(document.body.clientWidth - 1, document.body.clientHeight - 1);
+                //
+                img = loadImage('https://mono-file.s3.ap-northeast-1.amazonaws.com/1.png');
+            }
+
+            function draw() {
+                background(0);
+                image(img, 100, 100);
+            }
+
+        </script>
+    </body>
+
+</html>

@@ -10,61 +10,69 @@
             html {
                 background: #000;
                 color: #fff;
+                text-align: center;
             }
 
-            .title-logo {
-                display: block;
-                width: 60%;
-                min-width: 300px;
-                max-width: 90%;
-                margin: 0 auto;
+            .topBox {
+                text-align: left;
+                padding: 10px 0 0 10px;
             }
 
         </style>
     </head>
 
     <body>
-        <a href="./index.html">戻る</a>
-        <h1>２ページ目</h1>
+        <div class="topBox">
+            <a href="./index.html" class="mono">戻る</a>
+        </div>
         <hr>
-        <h3 style="color:#fff;">部屋作成</h3>
+        <h3 style="color:#fff;">ひとりでプレイ</h3>
+        <button onclick="button1()" class="mono">OK</button>
+        <br>
+        <br>
+        <hr>
+        <h3 style="color:#fff;">オンラインルームを作る</h3>
         <label for="input2-1">パスワード </label>
         <input type="text" id="input2-1">
         <br>
-        <button onclick="button1()">部屋作成</button>
         <br>
+        <button onclick="button2()" class="mono">OK</button>
         <br>
         <br>
         <hr>
-        <h3 style="color:#fff;">既存の部屋に参加</h3>
-        <label for="input2-2">部屋番号 </label>
+        <h3 style="color:#fff;">既存のオンラインルームに参加</h3>
+        <label for="input2-2" style="">部屋番号 </label>
         <input type="text" id="input2-2">
+        <br>
         <label for="input2-3">パスワード </label>
         <input type="text" id="input2-3">
         <br>
-        <button onclick="button2()">部屋に参加</button>
         <br>
+        <button onclick="button3()" class="mono">OK</button>
         <br>
         <br>
         <hr>
         <h3 style="color:#fff;">【未実装】ランダムマッチ</h3>
-        <button onclick="button3()">ランダムマッチ</button>
-        <br>
+        <button onclick="button4()" class="mono">OK</button>
         <br>
         <br>
         <hr>
         <script>
             monoSocket.init('index.html', 'cd02a276-44d2-44aa-b04b-7ddc26be5dba');
 
-
             function button1() {
+                // 「ひとりで」ボタンが押されたときの処理
+                monoSocket.signup('page3.html');
+            }
+
+            function button2() {
                 // 「部屋作成」ボタンが押されたときの処理
                 var password = document.getElementById("input2-1").value;   //テキストボックスからパスワードを読み込む
                 monoSocket.createRoom('page3.html', password);
             }
 
 
-            function button2() {
+            function button3() {
                 // 「既存の部屋に参加」ボタンが押されたときの処理
                 var roomNumber = document.getElementById("input2-2").value;   //テキストボックスから部屋番号を読み込む
                 var password = document.getElementById("input2-3").value;   //テキストボックスからパスワードを読み込む
@@ -72,7 +80,7 @@
             }
 
 
-            function button3() {
+            function button4() {
                 // 「ランダムマッチ」ボタンが押されたときの処理
                 monoSocket.joinRandomMatch('page3.html');
             }

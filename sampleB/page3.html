@@ -3,6 +3,7 @@
 
     <head>
         <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
         <title>TimeHunter</title>
         <script src="https://mono-socket.link"></script>
     </head>
@@ -10,8 +11,6 @@
     <body>
         <script>
             monoSocket.init('index.html', 'cd02a276-44d2-44aa-b04b-7ddc26be5dba');
-
-            const roomNumber = monoSocket.getRoomNumber();
 
             monoTile2D.setGround(
                 "ステージ１",
@@ -27,7 +26,9 @@
                 [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
             );
 
-            function preload() {
+            function setup() {
+                createCanvas(document.body.clientWidth - 1, document.body.clientHeight - 1);
+                //
                 monoTile2D.loadPlayerImage(0, DOWN, './img/player.png', 4, 4, 0, 0);   //プレイヤー画像の読み込み
                 monoTile2D.loadPlayerImage(0, DOWN, './img/player.png', 4, 4, 1, 0);   //プレイヤー画像の読み込み
                 monoTile2D.loadPlayerImage(0, DOWN, './img/player.png', 4, 4, 2, 0);   //プレイヤー画像の読み込み
@@ -49,11 +50,8 @@
                 monoTile2D.loadGroundImage(2, true, './img/2.png');  //地面の画像の読み込み
                 monoTile2D.loadGroundImage(3, true, './img/3.png');  //地面の画像の読み込み
                 monoTile2D.loadGroundImage(4, true, './img/4.png');  //地面の画像の読み込み
-            }
-
-            function setup() {
-                createCanvas(document.body.clientWidth - 1, document.body.clientHeight - 1);
-                monoTile2D.setCoordinate("ステージ１", 1, 4, RIGHT);
+                //
+                monoTile2D.setCoordinate("ステージ１", 1, 4, RIGHT);    // プレイヤーをワープさせる
             }
 
             function draw() {
@@ -61,7 +59,7 @@
                 monoTile2D.draw();
                 fill(255);
                 stroke(255);
-                text(`部屋番号：${roomNumber ?? '？'}`, 30, 30);
+                text(`部屋番号：${monoSocket.getRoomNumber() ?? '？'}`, 30, 30);
             }
 
         </script>

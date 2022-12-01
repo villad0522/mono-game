@@ -6,6 +6,9 @@ window.onunload = function () { };
 
 const style = document.createElement('style')
 style.innerHTML = `
+    *{
+        box-sizing: border-box;
+    }
     html {
         margin: 0;
         padding: 0;
@@ -28,6 +31,7 @@ style.innerHTML = `
         width: 100%;
         height: 100%;
     }
+
     .monoError {
         position:absolute;
         top:0px;
@@ -37,6 +41,7 @@ style.innerHTML = `
         background-color:#fff;
         z-index:999;
     }
+
     #monoSocketLoader {
         position:absolute;
         top:0px;
@@ -59,6 +64,41 @@ style.innerHTML = `
         width: 100px;
         height: 100px;
     }
+    
+    a.mono,
+    button.mono {
+        display: inline-block;
+        position: relative;
+        top: 0;
+        text-decoration: none;
+        margin: 0 0 3px 0;
+        color: black;
+        height: 40px;
+        font-size: 17px;
+        line-height: 17px;
+        padding: 12px 20px 8px 20px;
+        font-weight: bold;
+        background: #eee;
+        border: none;
+        border-radius: 10px;
+        border-bottom: solid 3px #999;
+    }
+
+    a.mono :hover,
+    button.mono :hover {
+        cursor: pointer;
+        background: #fff;
+    }
+
+    a.mono:active,
+    button.mono :active {
+        border-bottom: none;
+        height: 37px;
+        top: 3px;
+        margin-bottom: 6px;
+        outline: none;
+    }
+
 `;
 
 try {
@@ -97,7 +137,7 @@ class MonoSocket {
         this.isOnline = false;
         this._roomDatas = {};
         this._playerDatas = {};
-        this._sendInterval = 50;
+        this._sendInterval = 100;
         this._ERROR_MESSAGE__INIT = `全ての画面の先頭で、以下の関数を実行する必要があります。
 
 monoSocket.init( '最初の画面のファイル名', 'ゲームID' );
@@ -322,12 +362,15 @@ monoSocket.init( '最初の画面のファイル名', 'ゲームID' );
 
     // エラーを表示
     _showErrorMessage(message) {
-        document.body.innerHTML += `
+        try {
+            document.body.innerHTML += `
             <div class="monoError">
                 <h3 style="color:red;">エラー</h3>
                 <textarea style="color:red;width:100%;height:70vh">${message}</textarea>
             </div>
         `;
+        }
+        catch (e) { }
         this.deleteLoader();
         throw '\n\n' + message;
     }

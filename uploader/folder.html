@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+        <title>ファイルアップロード</title>
+        <style>
+            * {
+                box-sizing: border-box;
+            }
+
+            html {
+                margin: 0;
+                padding: 0;
+                width: 100%;
+                height: 100%;
+            }
+
+            body {
+                margin: 0;
+                padding: 0;
+                border: none;
+                width: 100%;
+                height: 100%;
+                text-align: center;
+            }
+
+            input[type="file"].mono {
+                display: none;
+            }
+
+            .flex-parent {
+                display: flex;
+                justify-content: center;
+                gap: 10px;
+            }
+
+            label.mono,
+            a.mono,
+            button.mono {
+                display: block;
+                position: relative;
+                top: 0;
+                text-decoration: none;
+                margin: 0 0 3px 0;
+                height: 106px;
+                color: black;
+                font-size: 17px;
+                padding: 12px 20px 8px 20px;
+                font-weight: bold;
+                background: #ddd;
+                border: none;
+                border-radius: 10px;
+                border-bottom: solid 3px #999;
+            }
+
+            label.mono img,
+            a.mono img,
+            button.mono img {
+                width: 50px;
+            }
+
+            label.mono:hover,
+            a.mono:hover,
+            button.mono:hover {
+                cursor: pointer;
+                background: #f0f0f0;
+                border-color: #bbb;
+            }
+
+            label.mono:active,
+            a.mono:active,
+            button.mono:active {
+                border-bottom: none;
+                height: 103px;
+                top: 3px;
+                margin-bottom: 6px;
+                outline: none;
+            }
+
+            #preview {
+                text-align: left;
+                padding: 5%;
+                background: #eee;
+                min-height: 100%;
+                height: max-content;
+            }
+
+            .node {
+                margin-top: 15px;
+                margin-left: 30px;
+            }
+
+            .node-text {
+                display: inline-block;
+                background: #fff;
+                border-right: solid 1px #999;
+                border-bottom: solid 1px #999;
+                border-radius: 5px;
+                padding: 5px 10px 5px 10px;
+            }
+
+            .icon {
+                display: inline-block;
+                width: 15px;
+            }
+
+            .thumbnail {
+                display: inline-block;
+                width: 30px;
+            }
+
+            .status {
+                display: inline-block;
+                margin-left: 20px;
+                font-size: small;
+                color: #999;
+            }
+
+        </style>
+    </head>
+
+    <body>
+        <br>
+        <h3>ドラッグ＆ドロップ</h3>
+        または
+        <br>
+        <br>
+        <div class="flex-parent">
+            <label for="file-input" class="mono">
+                <img src="./img/file.svg">
+                <br>
+                ファイルを選択
+            </label>
+            <input type="file" id="file-input" class="mono">
+            <label for="folder-input" class="mono">
+                <img src="./img/folder-upload.png">
+                <br>
+                フォルダを選択
+            </label>
+            <input type="file" id="folder-input" webkitdirectory class="mono">
+        </div>
+        <script>
+            // 参考文献
+            // https://bashalog.c-brains.jp/20/03/30-170110.php
+
+            var fileInput = document.getElementById('file-input');
+            var folderInput = document.getElementById('folder-input');
+
+            document.body.addEventListener('dragover', function (e) {
+                e.stopPropagation();
+                e.preventDefault();
+                this.style.background = '#e1e7f0';
+            }, false);
+
+            document.body.addEventListener('dragleave', function (e) {
+                e.stopPropagation();
+                e.preventDefault();
+                this.style.background = '#ffffff';
+            }, false);
+
+            document.body.addEventListener('drop', function (e) {
+                e.stopPropagation();
+                e.preventDefault();
+                this.style.background = '#ffffff'; //背景色を白に戻す
+                var files = e.dataTransfer.files; //ドロップしたファイルを取得
+                console.log(files);
+                fileInput.files = files; //inputのvalueをドラッグしたファイルに置き換える。
+                folderInput.files = files;
+                previewFile(files);
+            }, false);
+
+            fileInput.addEventListener('change', function () {
+                folderInput.files = this.files;
+                previewFile(this.files);
+            });
+            folderInput.addEventListener('change', function () {
+                fileInput.files = this.files;
+                previewFile(this.files);
+            });
+
+            async function previewFile(files) {
+                if (files.length == 0) return;
+                let uuidv4 = '';
+                document.body.innerHTML = '<div id="preview"></div>';
+                //
+                let topFolderName = '';
+                let isSameFolder = true;
+                for (const file of files) {
+                }
+                //
+                // フォルダやファイルの親子関係を求めて「elementIds」に格納する
+                const elementIds = {};
+                for (const file of files) {
+                    const filePath = file.webkitRelativePath ? file.webkitRelativePath : file.name;
+                    if (!filePath) continue;
+                    const filePaths = filePath.split('/');
+                    let buf = '';
+                    for (let i = 0; i < filePaths.length; i++) {
+                        const parentId = 'preview' + buf;
+                        const childId = 'preview' + buf + '/' + filePaths[i];
+                        elementIds[childId] = {
+                            parentId: parentId,
+                            nodeName: filePaths[i],
+                            isFolder: i != (filePaths.length - 1),
+                        };
+                        buf += '/' + filePaths[i];
+                    }
+                }
+                //
+                // 階層構造を表示
+                for (const elementId in elementIds) {
+                    const parentId = elementIds[elementId].parentId;
+                    const nodeName = elementIds[elementId].nodeName;
+                    const isFolder = elementIds[elementId].isFolder;
+                    if (isFolder) {
+                        document.getElementById(parentId).innerHTML += `
+                            <div id="${elementId}" class="node">
+                                <div>
+                                    <div class="node-text">
+                                        <img src="./img/folder.svg" class="icon">
+                                        ${nodeName}
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    }
+                    else {
+                        document.getElementById(parentId).innerHTML += `
+                            <div id="${elementId}" class="node">
+                                <div>
+                                    <div class="node-text">
+                                        <img src="./img/file.svg" id="${elementId}-icon" class="icon">
+                                        ${nodeName}
+                                        <div id="${elementId}-status" class="status">
+                                            待機中
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    }
+                }
+                //
+                for (const file of files) {
+                    const filePath = file.webkitRelativePath ? file.webkitRelativePath : file.name;
+                    const contentType = file.type;
+                    if (!contentType) continue;
+                    if (!filePath) continue;
+                    //
+                    if (contentType.startsWith('image')) {
+                        // FileReaderで読み込み、プレビュー画像を表示。
+                        var fr = new FileReader();
+                        fr.readAsDataURL(file);
+                        fr.onload = async () => {
+                            const thumbnail = document.createElement('img');
+                            thumbnail.setAttribute('src', fr.result);
+                            thumbnail.setAttribute('class', 'thumbnail');
+                            document.getElementById('preview/' + filePath + '-icon').replaceWith(thumbnail);
+                        };
+                    }
+                    try {
+                        const response = await fetch(
+                            `https://5bvgk7wq2v6c7ifczvusk6i6ai0qdvag.lambda-url.ap-northeast-1.on.aws/?filePath=${filePath}&contentType=${contentType}&uuidv4=${uuidv4}`,
+                            {
+                                method: "GET",
+                                headers: {},
+                            },
+                        );
+                        if (response.status != 200) throw 'lambdaに接続できません';
+                        const responseBody = await response.json();
+                        console.log(responseBody);
+                        if (!uuidv4) {
+                            uuidv4 = responseBody.uuidv4;
+                        }
+                        //
+                        await fetch(
+                            responseBody.postUrl,
+                            {
+                                method: "PUT",
+                                headers: {
+                                    'Content-Type': contentType,
+                                },
+                                body: file,
+                            },
+                        );
+                    }
+                    catch (err) {
+                        console.error(err);
+                        continue;
+                    }
+                }
+            }
+        </script>
+    </body>
+
+</html>

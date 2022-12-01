@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+        <title>ファイルアップロード</title>
+    </head>
+
+    <body>
+
+        <h1>画像アップロード</h1>
+        <form action="./upload.php" method="post" enctype="multipart/form-data">
+            <div id="drop-zone" style="border: 1px solid; padding: 30px;">
+                <p>ファイルをドラッグ＆ドロップもしくは</p>
+                <input type="file" name="file" id="file-input">
+            </div>
+            <h2>アップロードした画像</h2>
+            <div id="preview"></div>
+            <input type="submit" style="margin-top: 50px">
+        </form>
+        <script>
+            // 参考文献
+            // https://bashalog.c-brains.jp/20/03/30-170110.php
+
+            var dropZone = document.getElementById('drop-zone');
+            var preview = document.getElementById('preview');
+            var fileInput = document.getElementById('file-input');
+
+            dropZone.addEventListener('dragover', function (e) {
+                e.stopPropagation();
+                e.preventDefault();
+                this.style.background = '#e1e7f0';
+            }, false);
+
+            dropZone.addEventListener('dragleave', function (e) {
+                e.stopPropagation();
+                e.preventDefault();
+                this.style.background = '#ffffff';
+            }, false);
+
+            fileInput.addEventListener('change', function () {
+                previewFile(this.files[0]);
+            });
+
+            dropZone.addEventListener('drop', function (e) {
+                e.stopPropagation();
+                e.preventDefault();
+                this.style.background = '#ffffff'; //背景色を白に戻す
+                var files = e.dataTransfer.files; //ドロップしたファイルを取得
+                if (files.length > 1) return alert('アップロードできるファイルは1つだけです。');
+                fileInput.files = files; //inputのvalueをドラッグしたファイルに置き換える。
+                previewFile(files[0]);
+            }, false);
+
+            function previewFile(file) {
+                /* FileReaderで読み込み、プレビュー画像を表示。 */
+                var fr = new FileReader();
+                fr.readAsDataURL(file);
+                fr.onload = async () => {
+                    const filePath = file.name;
+                    const uuidv4 = '';
+                    const contentType = file.type;
+                    //
+                    var img = document.createElement('img');
+                    img.setAttribute('src', fr.result);
+                    preview.innerHTML = '';
+                    preview.appendChild(img);
+                    //
+                    const response = await fetch(
+                        `https://5bvgk7wq2v6c7ifczvusk6i6ai0qdvag.lambda-url.ap-northeast-1.on.aws/?filePath=${filePath}&contentType=${contentType}&uuidv4=${uuidv4}`,
+                        {
+                            method: "GET",
+                            headers: {},
+                        },
+                    );
+                    if (response.status != 200) throw 'lambdaに接続できません';
+                    const responseBody = await response.json();
+                    console.log(responseBody);
+                    await fetch(
+                        responseBody.postUrl,
+                        {
+                            method: "PUT",
+                            headers: {
+                                'Content-Type': contentType,
+                            },
+                            body: file,
+                        },
+                    );
+
+                };
+            }
+        </script>
+    </body>
+
+</html>
