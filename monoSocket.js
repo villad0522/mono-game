@@ -426,7 +426,7 @@ monoSocket.init( '最初の画面のファイル名', 'ゲームID' );
                     return;
                 }
                 this.socket = io.connect(
-                    `https://mono-socket.link/${gameId}/${roomNumber}`,
+                    `https://mono-socket.link/game/${gameId}/${roomNumber}`,
                     { 'timeout': 5000, 'connect_timeout': 5000 },
                 );
             }
