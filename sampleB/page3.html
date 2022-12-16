@@ -127,8 +127,8 @@
                             count = 0;
                             pastLog = [];
                             phase = 'FIRST';
-                            monoTile2D.setCoordinate(pastPlayerId, "虚無", 0, 0, UP);    // 過去の人を消す
-                            monoTile2D.setCoordinate("ステージ１", 1, 4, RIGHT);    // プレイヤーをワープさせる
+                            monoTile2D.forceSetCoordinate(pastPlayerId, "虚無", 0, 0, UP);    // 過去の人を消す
+                            monoTile2D.forceSetCoordinate("ステージ１", 1, 4, RIGHT);    // プレイヤーをワープさせる
                         }
                         else if (count < pastLog.length) {
                             const myCoordinate = pastLog[count];
@@ -142,7 +142,7 @@
                             count++;
                         }
                         else {
-                            monoTile2D.setCoordinate(pastPlayerId, "虚無", 0, 0, UP);    // 過去の人を消す
+                            monoTile2D.forceSetCoordinate(pastPlayerId, "虚無", 0, 0, UP);    // 過去の人を消す
                         }
                         break;
                 }

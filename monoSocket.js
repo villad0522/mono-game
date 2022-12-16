@@ -861,6 +861,39 @@ class MonoTile2D {
             },
         );
     }
+    forceSetCoordinate(...args) {
+        let playerId;
+        let mapKey;
+        let x;
+        let y;
+        let direction;
+        if (args.length == 5) {
+            playerId = args[0];
+            mapKey = args[1];
+            x = args[2];
+            y = args[3];
+            direction = args[4];
+        }
+        else if (args.length == 4) {
+            playerId = monoSocket.getPlayerId();
+            mapKey = args[0];
+            x = args[1];
+            y = args[2];
+            direction = args[3];
+        }
+        monoSocket.forceWritePlayerData(
+            playerId,
+            '位置',
+            {
+                speed: 0.3,
+                ...monoSocket.getPlayerData("位置"),
+                mapKey: mapKey,
+                x: x,
+                y: y,
+                direction: direction,
+            },
+        );
+    }
 
     setSpeed(...args) {
         let playerId;
@@ -1218,6 +1251,7 @@ class MonoTile2D {
         for (const playerId of monoSocket.getPlayerIds()) {
             const coordinate = monoSocket.getPlayerData(playerId, "位置");
             if (!coordinate) continue;
+            if (coordinate.mapKey != myCoordinate.mapKey) continue;
             if (Math.floor(coordinate.y) != yNumber) continue;
             const tileSize = this.getTileSize();
             const mapX = (width / 2) - (myCoordinate.x * tileSize);    //画面上における、マップの左上の座標
