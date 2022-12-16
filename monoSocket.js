@@ -1135,7 +1135,7 @@ class MonoTile2D {
                 this._showErrorMessage(`関数「monoTile2D.${this.setGround.name}()」の第５引数「tileNumber」に${typeof tileNumber}型の値が指定されています。number型の値を指定してください。`);
                 return;
             }
-            if (!groundImages[tileNumber]) {
+            if (!this.groundImages[tileNumber]) {
                 this._showErrorMessage(`関数「monoTile2D.${this.setGround.name}()」の第５引数「tileNumber」に存在しないタイル番号「${tileNumber}」が指定されています。先に「${this.loadGroundImage.name}()」を実行してください。`);
                 return;
             }

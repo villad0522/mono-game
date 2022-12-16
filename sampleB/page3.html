@@ -72,10 +72,12 @@
                 monoTile2D.setCoordinate("ステージ１", 1, 4, RIGHT);    // プレイヤーをワープさせる
             }
 
-            var pastLog = [];
+            const playerId = monoSocket.getPlayerId();
             var phase = 'FIRST';    // FIRST,  REVERSE_ANIMATION,  SECOND
             var count = 0;
-            const pastPlayerId = generateUuid();
+            var pastLogs = {
+                [playerId]: [],
+            };
 
             function draw() {
                 background(0);
@@ -85,64 +87,76 @@
                 text(`部屋番号：${monoSocket.getRoomNumber() ?? '？'}`, 30, 30);
                 switch (phase) {
                     case 'FIRST':
-                        if (monoTile2D.getGround(-1) == 3) {    //砂時計に当たったら
+                        if (monoTile2D.getGround(-1) == 4) {    //旗に当たったら
+                            // クリア
+                            count = 0;
+                            phase = 'FIRST';
+                            for (const id in pastLogs) {
+                                if (id == playerId) continue;
+                                monoTile2D.forceSetCoordinate(id, "虚無", 0, 0, UP);    // 過去の人を消す
+                            }
+                            monoTile2D.forceSetCoordinate("ステージ１", 1, 4, RIGHT);    // プレイヤーをワープさせる
+                            pastLogs = {
+                                [playerId]: [],
+                            };
+                        }
+                        else if (monoTile2D.getGround(-1) == 3) {    //砂時計に当たったら
                             // 時間逆行開始
-                            count = pastLog.length - 1;
                             monoTile2D.setSpeed(0);    //動けないようにする
+                            monoTile2D.setGround("ステージ１", -1, monoTile2D.getX(), monoTile2D.getY(), 1);
                             document.getElementById("reverseClock").style.display = 'block';    //砂時計を表示
                             phase = 'REVERSE_ANIMATION';
                         }
                         else {
-                            pastLog[count] = {
+                            pastLogs[playerId][count] = {
                                 x: monoTile2D.getX(),
                                 y: monoTile2D.getY(),
                                 direction: monoTile2D.getDirection(),
                             };
+                            for (const id in pastLogs) {
+                                if (id == playerId) continue;
+                                const pastLog = pastLogs[id];
+                                if (pastLog.length <= count) {
+                                    monoTile2D.forceSetCoordinate(id, "虚無", 0, 0, UP);    // 過去の人を消す
+                                    continue;
+                                }
+                                const myCoordinate = pastLog;
+                                monoTile2D.setCoordinate(
+                                    id,
+                                    "ステージ１",
+                                    myCoordinate.x,
+                                    myCoordinate.y,
+                                    myCoordinate.direction,
+                                );    // 過去の人ををワープさせる
+                            }
                             count++;
                         }
                         break;
                     case 'REVERSE_ANIMATION':
                         //時間を逆行中
                         if (count > 0) {
-                            const myCoordinate = pastLog[count];
-                            monoTile2D.setCoordinate(
-                                pastPlayerId,
-                                "ステージ１",
-                                myCoordinate.x,
-                                myCoordinate.y,
-                                myCoordinate.direction,
-                            );    // プレイヤーをワープさせる
+                            for (const id in pastLogs) {
+                                if (id == playerId) continue;
+                                const pastLog = pastLogs[id];
+                                if (pastLog.length <= count) continue;
+                                const myCoordinate = pastLog[count];
+                                monoTile2D.setCoordinate(
+                                    id,
+                                    "ステージ１",
+                                    myCoordinate.x,
+                                    myCoordinate.y,
+                                    myCoordinate.direction,
+                                );    // 過去の人をワープさせる
+                            }
                             count -= 3;
                         }
                         else {
                             count = 0;
                             monoTile2D.setSpeed(0.3);  //再び動けるように
                             document.getElementById("reverseClock").style.display = 'none'; //砂時計を消す
-                            phase = 'SECOND';
-                        }
-                        break;
-                    case 'SECOND':
-                        if (monoTile2D.getGround(-1) == 4) {    //旗に当たったら
-                            // クリア
-                            count = 0;
-                            pastLog = [];
                             phase = 'FIRST';
-                            monoTile2D.forceSetCoordinate(pastPlayerId, "虚無", 0, 0, UP);    // 過去の人を消す
-                            monoTile2D.forceSetCoordinate("ステージ１", 1, 4, RIGHT);    // プレイヤーをワープさせる
-                        }
-                        else if (count < pastLog.length) {
-                            const myCoordinate = pastLog[count];
-                            monoTile2D.setCoordinate(
-                                pastPlayerId,
-                                "ステージ１",
-                                myCoordinate.x,
-                                myCoordinate.y,
-                                myCoordinate.direction,
-                            );    // 過去の人ををワープさせる
-                            count++;
-                        }
-                        else {
-                            monoTile2D.forceSetCoordinate(pastPlayerId, "虚無", 0, 0, UP);    // 過去の人を消す
+                            pastLogs[generateUuid()] = pastLogs[playerId];
+                            pastLogs[playerId] = [];
                         }
                         break;
                 }
