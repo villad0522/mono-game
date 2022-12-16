@@ -1189,7 +1189,7 @@ class MonoTile2D {
             const tileSize = this.getTileSize();
             const mapX = (width / 2) - (myCoordinate.x * tileSize);    //画面上における、マップの左上の座標
             const mapY = (height / 2) - (myCoordinate.y * tileSize);    //画面上における、マップの左上の座標
-            const animeSpeed = 7;
+            const animeSpeed = 3;
             const walk = Math.floor(((coordinate.x + coordinate.y) % animeSpeed) / animeSpeed * 4);
             const img = this.playerImages[0][coordinate.direction][walk];
             if (!img) continue;
