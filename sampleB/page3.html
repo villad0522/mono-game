@@ -157,7 +157,7 @@
         <script>
             monoSocket.init('index.html', 'cd02a276-44d2-44aa-b04b-7ddc26be5dba');
 
-            var stage = 3;
+            var stage = 0;
             const playerId = monoSocket.getPlayerId();
             var phase = 'GAME';    // GAME,  REVERSE_ANIMATION,  GAME_OVER
             var count = 0;
@@ -230,7 +230,7 @@
                             [1, 2, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1],
                             [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
                         );
-                        maxCount = 50;
+                        maxCount = 100;
                         monoTile2D.forceSetCoordinate("ステージ2", 1, 8, RIGHT);    // プレイヤーをワープさせる
                         break;
                     case 3:
