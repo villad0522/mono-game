@@ -1128,6 +1128,8 @@ class MonoTile2D {
             this._showErrorMessage(`関数「monoTile2D.${this.getGround.name}()」の第４引数「yNumber」に${typeof yNumber}型の値が指定されています。number型の値を指定してください。`);
             return;
         }
+        xNumber = Math.round(xNumber);
+        yNumber = Math.round(yNumber);
         if (!this.groundMatrices[mapKey]) return undefined;
         if (!this.groundMatrices[mapKey][layerNumber]) return undefined;
         if (!this.groundMatrices[mapKey][layerNumber][yNumber]) return undefined;
