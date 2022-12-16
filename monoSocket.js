@@ -1120,8 +1120,8 @@ class MonoTile2D {
             }
         }
         else if ((args.length == 3) && (typeof args[0] == 'number')) {
-            const xNumber = args[0];
-            const yNumber = args[1];
+            const xNumber = Math.round(args[0]);
+            const yNumber = Math.round(args[1]);
             const tileNumber = args[2];
             if (typeof xNumber != 'number') {
                 this._showErrorMessage(`関数「monoTile2D.${this.setGround.name}()」の第３引数「xNumber」に${typeof xNumber}型の値が指定されています。number型の値を指定してください。`);
@@ -1145,6 +1145,7 @@ class MonoTile2D {
             if (!this.groundMatrices[mapKey][layerNumber][yNumber]) {
                 this.groundMatrices[mapKey][layerNumber][yNumber] = [];
             }
+            console.log(mapKey, layerNumber, yNumber, xNumber, tileNumber);
             this.groundMatrices[mapKey][layerNumber][yNumber][xNumber] = tileNumber;
             //
             if (xNumber > this.groundMatrices[mapKey].width) {
