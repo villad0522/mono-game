@@ -22,27 +22,257 @@
                 z-index: 999;
             }
 
+            .overlay {
+                text-align: center;
+                display: none;
+                position: absolute;
+                top: 0;
+                bottom: 0;
+                right: 0;
+                left: 0;
+                background-color: rgba(0, 0, 0, 0.8);
+                z-index: 999;
+            }
+
+            .overlay>h1,
+            .overlay>h2,
+            .overlay>h3,
+            .overlay>h4,
+            .overlay>h5,
+            .overlay>h6 {
+                color: #fff;
+            }
+
+            .overlay2 {
+                text-align: center;
+                display: none;
+                position: absolute;
+                top: 0;
+                bottom: 0;
+                right: 0;
+                left: 0;
+                background-color: rgba(255, 255, 255, 0.8);
+                z-index: 999;
+            }
+
+            /*===========================================================================*/
+            /* button3dクラス   立体的なボタンを作れます */
+
+            label.button3d,
+            a.button3d,
+            button.button3d {
+                color: #6e6e73;
+                display: inline-block;
+                width: max-content;
+                position: relative;
+                top: 0;
+                text-decoration: none;
+                margin: 0 0 3px 0;
+                padding: 12px 20px 8px 20px;
+                background: #fafafa;
+                border: none;
+                border-radius: 10px;
+                border-bottom: solid 3px #bbb;
+                box-shadow: 0 2px 10px 0 rgba(0, 0, 0, .1);
+            }
+
+            label.button3d img,
+            a.button3d img,
+            button.button3d img {
+                width: 50px;
+            }
+
+            label.button3d:hover,
+            a.button3d:hover,
+            button.button3d:hover {
+                cursor: pointer;
+                background: #fff;
+            }
+
+            label.button3d:active,
+            a.button3d:active,
+            button.button3d:active {
+                border-bottom: none;
+                top: 3px;
+                margin-bottom: 6px;
+                outline: none;
+                box-shadow: none;
+            }
+
+            label.button3d:disabled,
+            a.button3d:disabled,
+            button.button3d:disabled {
+                color: #aaa;
+            }
+
         </style>
     </head>
 
     <body>
         <div id="reverseClock"></div>
+        <div id="gameover-found" class="overlay">
+            <br>
+            <br>
+            <br>
+            <br>
+            <br>
+            <h2>ゲームオーバー</h2>
+            <br>
+            <br>
+            <br>
+            <br>
+            <br>
+            <h5>過去の自分に見つかった</h5>
+            <button onclick="init()" class="button3d">もう一度</button>
+        </div>
+        <div id="gameover-timeup" class="overlay">
+            <br>
+            <br>
+            <br>
+            <br>
+            <br>
+            <h2>ゲームオーバー</h2>
+            <br>
+            <br>
+            <br>
+            <br>
+            <br>
+            <h5>時間切れ</h5>
+            <button onclick="init()" class="button3d">もう一度</button>
+        </div>
+        <div id="gameclear" class="overlay2">
+            <br>
+            <br>
+            <br>
+            <br>
+            <br>
+            <h1>ゲームクリア</h1>
+            <br>
+            <br>
+            <br>
+            <br>
+            <br>
+            <button onclick="stage++;init();" class="button3d" style="font-weight:bold">次のステージへ</button>
+        </div>
         <script>
             monoSocket.init('index.html', 'cd02a276-44d2-44aa-b04b-7ddc26be5dba');
 
-            monoTile2D.setGround(
-                "ステージ１",
-                -1,
-                [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-                [1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1],
-                [1, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1],
-                [1, 1, 1, 0, 1, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1],
-                [1, 2, 0, 0, 0, 0, 0, 4, 1, 3, 1, 1, 1, 0, 3, 1],
-                [1, 1, 0, 1, 1, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1, 1],
-                [1, 1, 0, 1, 1, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1, 1],
-                [1, 1, 0, 4, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1],
-                [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-            );
+            var stage = 3;
+            const playerId = monoSocket.getPlayerId();
+            var phase = 'GAME';    // GAME,  REVERSE_ANIMATION,  GAME_OVER
+            var count = 0;
+            var pastLogs = {
+                [playerId]: [],
+            };
+            var maxCount = 200;
+
+            function init() {
+                if (stage > 3) stage = 0;
+                phase = 'GAME';
+                count = 0;
+                for (const id in pastLogs) {
+                    if (id == playerId) continue;
+                    monoTile2D.forceSetCoordinate(id, "虚無", 0, 0, UP);    // 過去の人を消す
+                }
+                pastLogs = {
+                    [playerId]: [],
+                };
+                monoTile2D.setSpeed(0.3);  //再び動けるように
+                document.getElementById("reverseClock").style.display = 'none'; //砂時計を消す
+                document.getElementById("gameover-found").style.display = 'none'; //ゲームオーバー画面を消す
+                document.getElementById("gameover-timeup").style.display = 'none'; //ゲームオーバー画面を消す
+                document.getElementById("gameclear").style.display = 'none'; //ゲームクリア画面を消す
+                switch (stage) {
+                    case 0:
+                        monoTile2D.setGround(
+                            "ステージ0",
+                            -1,
+                            [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+                            [1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1],
+                            [1, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1],
+                            [1, 1, 1, 0, 1, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1],
+                            [1, 2, 0, 0, 0, 0, 0, 0, 1, 3, 1, 1, 1, 0, 4, 1],
+                            [1, 1, 0, 1, 1, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1, 1],
+                            [1, 1, 0, 1, 1, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1, 1],
+                            [1, 1, 0, 3, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1],
+                            [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+                        );
+                        maxCount = 200;
+                        monoTile2D.forceSetCoordinate("ステージ0", 1, 4, RIGHT);    // プレイヤーをワープさせる
+                        break;
+                    case 1:
+                        monoTile2D.setGround(
+                            "ステージ1",
+                            -1,
+                            [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+                            [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 4, 1],
+                            [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1],
+                            [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1],
+                            [1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1],
+                            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 1],
+                            [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+                        );
+                        maxCount = 200;
+                        monoTile2D.forceSetCoordinate("ステージ1", 1, 4, DOWN);    // プレイヤーをワープさせる
+                        break;
+                    case 2:
+                        monoTile2D.setGround(
+                            "ステージ2",
+                            -1,
+                            [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+                            [1, 1, 3, 0, 0, 0, 1, 1, 1, 1, 1, 1],
+                            [1, 1, 0, 1, 1, 0, 1, 1, 1, 1, 1, 1],
+                            [1, 1, 0, 1, 1, 0, 1, 1, 1, 1, 1, 1],
+                            [1, 1, 0, 1, 1, 0, 1, 1, 1, 1, 4, 1],
+                            [1, 1, 0, 1, 1, 0, 1, 1, 1, 1, 0, 1],
+                            [1, 1, 0, 1, 1, 3, 1, 1, 1, 1, 0, 1],
+                            [1, 1, 0, 1, 1, 0, 1, 1, 1, 1, 0, 1],
+                            [1, 2, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1],
+                            [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+                        );
+                        maxCount = 50;
+                        monoTile2D.forceSetCoordinate("ステージ2", 1, 8, RIGHT);    // プレイヤーをワープさせる
+                        break;
+                    case 3:
+                        monoTile2D.setGround(
+                            "ステージ3",
+                            -1,
+                            [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+                            [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+                            [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+                            [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+                            [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+                            [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+                            [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+                            [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+                            [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+                            [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+                            [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+                            [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+                            [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+                            [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+                            [1, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 3, 1, 1, 1, 1, 1, 1, 1, 1],
+                            [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+                            [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+                            [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+                            [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+                            [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+                            [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 4, 1],
+                            [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1],
+                            [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1],
+                            [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1],
+                            [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1],
+                            [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 1],
+                            [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+                            [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+                        );
+                        maxCount = 80;
+                        monoTile2D.forceSetCoordinate("ステージ3", 16, 14, RIGHT);    // プレイヤーをワープさせる
+                        break;
+                }
+            }
+
+            init();
 
             function setup() {
                 createCanvas(document.body.clientWidth - 1, document.body.clientHeight - 1);
@@ -68,16 +298,7 @@
                 monoTile2D.loadGroundImage(2, true, 'https://c3d6.8mo.nl/2.png');  //地面の画像の読み込み
                 monoTile2D.loadGroundImage(3, true, 'https://c3d6.8mo.nl/3.png');  //地面の画像の読み込み
                 monoTile2D.loadGroundImage(4, true, 'https://c3d6.8mo.nl/4.png');  //地面の画像の読み込み
-                //
-                monoTile2D.setCoordinate("ステージ１", 1, 4, RIGHT);    // プレイヤーをワープさせる
             }
-
-            const playerId = monoSocket.getPlayerId();
-            var phase = 'FIRST';    // FIRST,  REVERSE_ANIMATION,  SECOND
-            var count = 0;
-            var pastLogs = {
-                [playerId]: [],
-            };
 
             function draw() {
                 background(0);
@@ -86,26 +307,26 @@
                 stroke(255);
                 text(`部屋番号：${monoSocket.getRoomNumber() ?? '？'}`, 30, 30);
                 switch (phase) {
-                    case 'FIRST':
+                    case 'GAME':
                         if (monoTile2D.getGround(-1) == 4) {    //旗に当たったら
                             // クリア
-                            count = 0;
-                            phase = 'FIRST';
-                            for (const id in pastLogs) {
-                                if (id == playerId) continue;
-                                monoTile2D.forceSetCoordinate(id, "虚無", 0, 0, UP);    // 過去の人を消す
-                            }
-                            monoTile2D.forceSetCoordinate("ステージ１", 1, 4, RIGHT);    // プレイヤーをワープさせる
-                            pastLogs = {
-                                [playerId]: [],
-                            };
+                            monoTile2D.setSpeed(0);    //動けないようにする
+                            document.getElementById("gameclear").style.display = 'block';    //ゲームクリア画面を表示
+                            phase = 'GAME_CLEAR';
                         }
                         else if (monoTile2D.getGround(-1) == 3) {    //砂時計に当たったら
                             // 時間逆行開始
                             monoTile2D.setSpeed(0);    //動けないようにする
-                            monoTile2D.setGround("ステージ１", -1, monoTile2D.getX(), monoTile2D.getY(), 1);
+                            monoTile2D.setGround("ステージ" + stage, -1, monoTile2D.getX(), monoTile2D.getY(), 0);
                             document.getElementById("reverseClock").style.display = 'block';    //砂時計を表示
                             phase = 'REVERSE_ANIMATION';
+                            pastLogs[generateUuid()] = pastLogs[playerId];
+                            pastLogs[playerId] = [];
+                        }
+                        else if (count > maxCount) {
+                            monoTile2D.setSpeed(0);    //動けないようにする
+                            document.getElementById("gameover-timeup").style.display = 'block';    //ゲームオーバー画面を表示
+                            phase = 'GAME_OVER';
                         }
                         else {
                             pastLogs[playerId][count] = {
@@ -120,13 +341,19 @@
                                     monoTile2D.forceSetCoordinate(id, "虚無", 0, 0, UP);    // 過去の人を消す
                                     continue;
                                 }
-                                const myCoordinate = pastLog;
+                                const pastCoordinate = pastLog[count];
+                                if (checkGameOver(pastCoordinate)) {
+                                    //console.log('見つかった！');
+                                    monoTile2D.setSpeed(0);    //動けないようにする
+                                    document.getElementById("gameover-found").style.display = 'block';    //ゲームオーバー画面を表示
+                                    phase = 'GAME_OVER';
+                                }
                                 monoTile2D.setCoordinate(
                                     id,
-                                    "ステージ１",
-                                    myCoordinate.x,
-                                    myCoordinate.y,
-                                    myCoordinate.direction,
+                                    "ステージ" + stage,
+                                    pastCoordinate.x,
+                                    pastCoordinate.y,
+                                    pastCoordinate.direction,
                                 );    // 過去の人ををワープさせる
                             }
                             count++;
@@ -139,13 +366,13 @@
                                 if (id == playerId) continue;
                                 const pastLog = pastLogs[id];
                                 if (pastLog.length <= count) continue;
-                                const myCoordinate = pastLog[count];
+                                const pastCoordinate = pastLog[count];
                                 monoTile2D.setCoordinate(
                                     id,
-                                    "ステージ１",
-                                    myCoordinate.x,
-                                    myCoordinate.y,
-                                    myCoordinate.direction,
+                                    "ステージ" + stage,
+                                    pastCoordinate.x,
+                                    pastCoordinate.y,
+                                    pastCoordinate.direction,
                                 );    // 過去の人をワープさせる
                             }
                             count -= 3;
@@ -154,12 +381,62 @@
                             count = 0;
                             monoTile2D.setSpeed(0.3);  //再び動けるように
                             document.getElementById("reverseClock").style.display = 'none'; //砂時計を消す
-                            phase = 'FIRST';
-                            pastLogs[generateUuid()] = pastLogs[playerId];
-                            pastLogs[playerId] = [];
+                            phase = 'GAME';
                         }
                         break;
+                    case 'GAME_OVER':
+                        // ゲームオーバー
+                        break;
+                    case 'GAME_CLEAR':
+                        // ゲームクリア
+                        break;
                 }
+                fill(100, 100, 100);
+                rect(0, 0, width - (count / maxCount * width), 20);
+            }
+
+            function checkGameOver(enemyCoordinate) {
+                const myX = monoTile2D.getX();
+                const myY = monoTile2D.getY();
+                switch (enemyCoordinate.direction) {
+                    case UP:  //敵が上を向いているとき
+                        if (Math.round(enemyCoordinate.x) != Math.round(myX)) return false;
+                        if (enemyCoordinate.y < myY) return false;  //敵が自分より上にいる場合は見つかっていない
+                        // 敵と自分の間に壁があるか確かめる
+                        for (let y = myY; y < enemyCoordinate.y; y++) {
+                            const tileNumber = monoTile2D.getGround("ステージ" + stage, -1, myX, y);
+                            if (tileNumber == 1) return false;  //壁がある場合はセーフ
+                        }
+                        return true;
+                    case DOWN:  //敵が下を向いているとき
+                        if (Math.round(enemyCoordinate.x) != Math.round(myX)) return false;
+                        if (enemyCoordinate.y > myY) return false;  //敵が自分より下にいる場合は見つかっていない
+                        // 敵と自分の間に壁があるか確かめる
+                        for (let y = enemyCoordinate.y; y < myY; y++) {
+                            const tileNumber = monoTile2D.getGround("ステージ" + stage, -1, myX, y);
+                            if (tileNumber == 1) return false;  //壁がある場合はセーフ
+                        }
+                        return true;
+                    case LEFT:  //敵が左を向いているとき
+                        if (Math.round(enemyCoordinate.y) != Math.round(myY)) return false;
+                        if (enemyCoordinate.x < myX) return false;  //敵が自分より左にいる場合は見つかっていない
+                        // 敵と自分の間に壁があるか確かめる
+                        for (let x = myX; x < enemyCoordinate.x; x++) {
+                            const tileNumber = monoTile2D.getGround("ステージ" + stage, -1, x, myY);
+                            if (tileNumber == 1) return false;  //壁がある場合はセーフ
+                        }
+                        return true;
+                    case RIGHT:  //敵が右を向いているとき
+                        if (Math.round(enemyCoordinate.y) != Math.round(myY)) return false;
+                        if (enemyCoordinate.x > myX) return false;  //敵が自分より右にいる場合は見つかっていない
+                        // 敵と自分の間に壁があるか確かめる
+                        for (let x = enemyCoordinate.x; x < myX; x++) {
+                            const tileNumber = monoTile2D.getGround("ステージ" + stage, -1, x, myY);
+                            if (tileNumber == 1) return false;  //壁がある場合はセーフ
+                        }
+                        return true;
+                }
+                return false;
             }
 
             function generateUuid() {
