@@ -873,7 +873,7 @@ class MonoTile2D {
             playerId = monoSocket.getPlayerId();
             newSpeed = args[0];
         }
-        monoSocket.writePlayerData(
+        monoSocket.forceWritePlayerData(
             playerId,
             '位置',
             {
