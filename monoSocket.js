@@ -852,10 +852,33 @@ class MonoTile2D {
             playerId,
             '位置',
             {
+                speed: 0.3,
+                ...monoSocket.getPlayerData("位置"),
                 mapKey: mapKey,
                 x: x,
                 y: y,
                 direction: direction,
+            },
+        );
+    }
+
+    setSpeed(...args) {
+        let playerId;
+        let newSpeed;
+        if (args.length == 2) {
+            playerId = args[0];
+            newSpeed = args[1];
+        }
+        else if (args.length == 1) {
+            playerId = monoSocket.getPlayerId();
+            newSpeed = args[0];
+        }
+        monoSocket.writePlayerData(
+            playerId,
+            '位置',
+            {
+                ...monoSocket.getPlayerData("位置"),
+                speed: newSpeed,
             },
         );
     }
@@ -1220,8 +1243,8 @@ class MonoTile2D {
         let x = myCoordinate.x;
         let y = myCoordinate.y;
         let direction = myCoordinate.direction;
-        if (keyIsPressed) {
-            const speed = 0.3;
+        const speed = myCoordinate.speed;
+        if (keyIsPressed && speed > 0) {
             if (key === "w" || keyCode === UP_ARROW) {
                 y -= speed;
                 direction = UP;

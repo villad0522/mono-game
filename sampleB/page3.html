@@ -71,15 +71,52 @@
                 monoTile2D.setCoordinate("ステージ１", 1, 4, RIGHT);    // プレイヤーをワープさせる
             }
 
+            var pastLog = [];
+            var isReverse = false;
+            var count = 0;
+
             function draw() {
                 background(0);
                 monoTile2D.draw();
                 fill(255);
                 stroke(255);
                 text(`部屋番号：${monoSocket.getRoomNumber() ?? '？'}`, 30, 30);
-                console.log(monoTile2D.getGround(-1));
-                if (monoTile2D.getGround(-1) == 4) {
-                    document.getElementById("reverseClock").style.display = 'block';
+                if (monoTile2D.getGround(-1) == 3) {    //砂時計に当たったら
+                    if (!isReverse) {    //時間逆行をしていなかったら
+                        // 時間逆行開始
+                        count = pastLog.length - 1;
+                        setSpeed(0);    //動けないようにする
+                        document.getElementById("reverseClock").style.display = 'block';    //砂時計を表示
+                        isReverse = true;
+                    }
+                }
+                if (isReverse) {
+                    //時間を逆行中
+                    if (count > 0) {
+                        const myCoordinate = pastLog[count];
+                        monoTile2D.setCoordinate(
+                            "ステージ１",
+                            myCoordinate.x,
+                            myCoordinate.y,
+                            myCoordinate.direction,
+                        );    // プレイヤーをワープさせる
+                        count -= 2;
+                    }
+                    else {
+                        count = 0;
+                        setSpeed(0.3);  //再び動けるように
+                        document.getElementById("reverseClock").style.display = 'none'; //砂時計を消す
+                        isReverse = false;
+                    }
+                }
+                else {
+                    //時間を正しく進んでいる
+                    pastLog[count] = {
+                        x: monoTile2D.getX(),
+                        y: monoTile2D.getY(),
+                        direction: monoTile2D.getDirection(),
+                    };
+                    count++;
                 }
             }
 
