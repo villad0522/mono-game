@@ -1103,7 +1103,15 @@ class MonoTile2D {
             return;
         }
     }
-    getGround(mapKey, layerNumber, xNumber, yNumber) {
+    getGround(...args) {
+        let [mapKey, layerNumber, xNumber, yNumber] = args;
+        if (args.length < 4) {
+            const coordinate = monoSocket.getPlayerData("位置");
+            mapKey = coordinate.mapKey;
+            layerNumber = args[0];
+            xNumber = coordinate.x;
+            yNumber = coordinate.y;
+        }
         if (typeof mapKey != 'string') {
             this._showErrorMessage(`関数「monoTile2D.${this.getGround.name}()」の第１引数「mapKey」に${typeof mapKey}型の値が指定されています。string型の値を指定してください。`);
             return;

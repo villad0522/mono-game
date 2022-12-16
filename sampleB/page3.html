@@ -6,9 +6,26 @@
         <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
         <title>TimeHunter</title>
         <script src="https://mono-socket.link"></script>
+        <style>
+            #reverseClock {
+                display: none;
+                position: absolute;
+                top: 0;
+                bottom: 0;
+                right: 0;
+                left: 0;
+                background-image: url(https://c3d6.8mo.nl/reverse-clock.gif);
+                background-repeat: no-repeat;
+                background-size: 80%;
+                background-position: center center;
+                z-index: 999;
+            }
+
+        </style>
     </head>
 
     <body>
+        <div id="reverseClock"></div>
         <script>
             monoSocket.init('index.html', 'cd02a276-44d2-44aa-b04b-7ddc26be5dba');
 
@@ -60,6 +77,10 @@
                 fill(255);
                 stroke(255);
                 text(`部屋番号：${monoSocket.getRoomNumber() ?? '？'}`, 30, 30);
+                console.log(monoTile2D.getGround(-1));
+                if (monoTile2D.getGround(-1) == 4) {
+                    document.getElementById("reverseClock").style.display = 'block';
+                }
             }
 
         </script>
