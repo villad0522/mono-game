@@ -84,14 +84,14 @@ style.innerHTML = `
         border-bottom: solid 3px #999;
     }
 
-    a.mono :hover,
-    button.mono :hover {
+    a.mono:hover,
+    button.mono:hover {
         cursor: pointer;
         background: #fff;
     }
 
     a.mono:active,
-    button.mono :active {
+    button.mono:active {
         border-bottom: none;
         height: 37px;
         top: 3px;
