@@ -65,39 +65,6 @@ style.innerHTML = `
         height: 100px;
     }
     
-    a.mono,
-    button.mono {
-        display: inline-block;
-        position: relative;
-        top: 0;
-        text-decoration: none;
-        margin: 0 0 3px 0;
-        color: black;
-        height: 40px;
-        font-size: 17px;
-        line-height: 17px;
-        padding: 12px 20px 8px 20px;
-        font-weight: bold;
-        background: #eee;
-        border: none;
-        border-radius: 10px;
-        border-bottom: solid 3px #999;
-    }
-
-    a.mono:hover,
-    button.mono:hover {
-        cursor: pointer;
-        background: #fff;
-    }
-
-    a.mono:active,
-    button.mono:active {
-        border-bottom: none;
-        height: 37px;
-        top: 3px;
-        margin-bottom: 6px;
-        outline: none;
-    }
 
 `;
 
@@ -137,7 +104,7 @@ class MonoSocket {
         this.isOnline = false;
         this._roomDatas = {};
         this._playerDatas = {};
-        this._sendInterval = 100;
+        this._sendInterval = 50;
         this._ERROR_MESSAGE__INIT = `全ての画面の先頭で、以下の関数を実行する必要があります。
 
 monoSocket.init( '最初の画面のファイル名', 'ゲームID' );
