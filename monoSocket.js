@@ -1283,7 +1283,7 @@ class MonoTile2D {
         let direction = myCoordinate.direction;
         const speed = myCoordinate.speed;
         const nowTime = new Date().getTime();
-        const speed2 = (nowTime - this.pastTime) / 1000 * speed;
+        const speed2 = (nowTime - this.pastTime) / 10 * speed;
         this.pastTime = nowTime;
         if (keyIsPressed && speed2 > 0) {
             if (key === "w" || keyCode === UP_ARROW) {
