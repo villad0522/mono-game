@@ -1274,6 +1274,7 @@ class MonoTile2D {
         }
     }
     _move() {
+        console.log("move");
         const myCoordinate = monoSocket.getPlayerData("位置");
         if (!myCoordinate) return;
         let mapKey = myCoordinate.mapKey;
