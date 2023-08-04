@@ -149,7 +149,7 @@ monoSocket.init( '最初の画面のファイル名', 'ゲームID' );
     _setIsReady(isReady) {
         this.isReady = isReady;
     }
-    getIsReady = () => true,//this.isReady;
+    getIsReady = () => true;//this.isReady;
     //
     // オンラインかどうか
     _setIsOnline(isOnline) {
