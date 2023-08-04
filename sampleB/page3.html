@@ -312,6 +312,8 @@
                 monoTile2D.loadGroundImage(4, true, 'https://cafd.8mo.nl/4.png');  //地面の画像の読み込み
             }
 
+            var programCount = 0;
+
             function draw() {
                 background(0);
                 monoTile2D.draw();
@@ -351,6 +353,10 @@
                                 y: monoTile2D.getY(),
                                 direction: monoTile2D.getDirection(),
                             };
+                            count++;
+                            programCount++;
+                            if (programCount < 10) break;
+                            programCount = 0;
                             for (const id in pastLogs) {
                                 if (id == playerId) continue;
                                 const pastLog = pastLogs[id];
@@ -373,7 +379,6 @@
                                     pastCoordinate.direction,
                                 );    // 過去の人ををワープさせる
                             }
-                            count++;
                         }
                         break;
                     case 'REVERSE_ANIMATION':
