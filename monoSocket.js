@@ -149,7 +149,7 @@ monoSocket.init( '最初の画面のファイル名', 'ゲームID' );
     _setIsReady(isReady) {
         this.isReady = isReady;
     }
-    getIsReady = () => true;//this.isReady;
+    getIsReady = () => this.isReady;
     //
     // オンラインかどうか
     _setIsOnline(isOnline) {
@@ -1274,7 +1274,6 @@ class MonoTile2D {
         }
     }
     _move() {
-        console.log("move");
         const myCoordinate = monoSocket.getPlayerData("位置");
         if (!myCoordinate) return;
         let mapKey = myCoordinate.mapKey;
@@ -1283,6 +1282,7 @@ class MonoTile2D {
         let direction = myCoordinate.direction;
         const speed = myCoordinate.speed;
         if (keyIsPressed && speed > 0) {
+            console.log(keyCode);
             if (key === "w" || keyCode === UP_ARROW) {
                 y -= speed;
                 direction = UP;
@@ -1329,12 +1329,12 @@ class MonoTile2D {
     }
     draw() {
         if (this.getTileSize() == undefined) {
-            if (monoSocket.getIsReady()) {
-                this.setTileSizeByPercentage(10);
-            }
-            else {
-                return;
-            }
+            //if (monoSocket.getIsReady()) {
+            this.setTileSizeByPercentage(10);
+            //}
+            //else {
+            //return;
+            //}
         }
         imageMode(CENTER);
         this._move();   //移動
