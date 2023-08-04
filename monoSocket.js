@@ -767,6 +767,7 @@ class MonoTile2D {
         this.groundPass = {};
         this.groundImages = {};
         this.playerImages = {};
+        this.pastTime = 0;
     }
     // エラーを表示
     _showErrorMessage(message) {
@@ -1281,22 +1282,24 @@ class MonoTile2D {
         let y = myCoordinate.y;
         let direction = myCoordinate.direction;
         const speed = myCoordinate.speed;
-        if (keyIsPressed && speed > 0) {
-            console.log(keyCode);
+        const nowTime = new Date().getTime();
+        const speed2 = (nowTime - this.pastTime) / 1000 * speed;
+        this.pastTime = nowTime;
+        if (keyIsPressed && speed2 > 0) {
             if (key === "w" || keyCode === UP_ARROW) {
-                y -= speed;
+                y -= speed2;
                 direction = UP;
             }
             else if (key === "s" || keyCode === DOWN_ARROW) {
-                y += speed;
+                y += speed2;
                 direction = DOWN;
             }
             else if (key === "d" || keyCode === RIGHT_ARROW) {
-                x += speed;
+                x += speed2;
                 direction = RIGHT;
             }
             else if (key === "a" || keyCode === LEFT_ARROW) {
-                x -= speed;
+                x -= speed2;
                 direction = LEFT;
             }
             let x1 = Math.round(x);
@@ -1329,12 +1332,12 @@ class MonoTile2D {
     }
     draw() {
         if (this.getTileSize() == undefined) {
-            //if (monoSocket.getIsReady()) {
-            this.setTileSizeByPercentage(10);
-            //}
-            //else {
-            //return;
-            //}
+            if (monoSocket.getIsReady()) {
+                this.setTileSizeByPercentage(10);
+            }
+            else {
+                return;
+            }
         }
         imageMode(CENTER);
         this._move();   //移動
